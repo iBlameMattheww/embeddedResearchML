@@ -46,7 +46,7 @@ def main():
     beta = 8 / 3
     rho = 28
     position0 = [0.0, 1.0, 1.0]
-    timePoints = np.linspace(0, 100, 100001)
+    timePoints = np.linspace(0, 60, 10000)
     states = odeint(LorenzSystem, position0, timePoints, args=(sigma, beta, rho))
     xSolved, ySolved, zSolved = states[:,0], states[:,1], states[:,2]
 
