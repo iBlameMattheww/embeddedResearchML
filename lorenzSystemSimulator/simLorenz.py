@@ -38,9 +38,6 @@ def LorenzSystem(state, t, sigma, beta, rho):
     dz = x * y - beta * z
     return [dx, dy, dz]
 
-
-
-
 def main():
     sigma = 10
     beta = 8 / 3
@@ -61,7 +58,6 @@ def main():
     ax.set_zlabel('Z', color='white')
     ax.tick_params(colors='white')
 
-    
     points = np.array([xSolved, ySolved, zSolved]).T.reshape(-1, 1, 3)
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
     norm = plt.Normalize(timePoints.min(), timePoints.max())
@@ -73,9 +69,7 @@ def main():
     ax.set_ylim(ySolved.min(), ySolved.max())
     ax.set_zlim(zSolved.min(), zSolved.max())
 
+    plot_lorenz_plotly(xSolved, ySolved, zSolved) # Plot with Plotly for GPU-accelerated interactive visualization
 
-   
-    # Plot with Plotly for GPU-accelerated interactive visualization
-    plot_lorenz_plotly(xSolved, ySolved, zSolved)
 if __name__ == "__main__":
     main()

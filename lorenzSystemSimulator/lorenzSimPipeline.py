@@ -22,12 +22,12 @@ def generateLorenzData(samples):
         data = np.stack([xSolved, ySolved, zSolved], axis=1)
         totalData.append(data)
     totalData = np.array(totalData)
-    np.save('C:\\Users\\Matthew\\Downloads\\lorenz_trajectories.npy', totalData)
+    np.save('C:\\Users\\Matthew\\Downloads\\lorenz_trajectories200.npy', totalData)
 
 
 
 def main():
-    generateLorenzData(samples=10000)
+    generateLorenzData(samples=200)
 
 if __name__ == "__main__":
     main()

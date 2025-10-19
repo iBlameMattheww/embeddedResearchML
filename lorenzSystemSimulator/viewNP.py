@@ -1,7 +1,7 @@
 import numpy as np
 import plotly.graph_objects as go
 
-data = np.load('C:\\Users\\Matthew\\Downloads\\lorenz_trajectories.npy')
+data = np.load('C:\\Users\\Matthew\\Downloads\\lorenz_trajectories200.npy')
 print(data.shape)        # (samples, timesteps, 3)
 print(data[0])           # First trajectory
 
