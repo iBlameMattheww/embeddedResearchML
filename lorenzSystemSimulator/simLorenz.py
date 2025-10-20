@@ -5,7 +5,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 from scipy.integrate import odeint
 from matplotlib import cm
-from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 def plot_lorenz_plotly(xSolved, ySolved, zSolved):
     import plotly.io as pio
