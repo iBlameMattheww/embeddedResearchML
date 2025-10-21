@@ -27,7 +27,7 @@ def generateLorenzData(samples):
 
 
 def main():
-    generateLorenzData(samples=200)
+    generateLorenzData(samples=500)
 
 if __name__ == "__main__":
     main()
