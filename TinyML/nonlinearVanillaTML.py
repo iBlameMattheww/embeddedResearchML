@@ -59,6 +59,7 @@ plt.show()
 
 # Export trained model
 model.export(MODEL_TF)
+model.save(os.path.join(base_dir, "model.keras"))
 
 # ==============================
 #   Convert to TFLite (float)
