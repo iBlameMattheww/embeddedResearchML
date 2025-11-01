@@ -1,5 +1,38 @@
 {
+    // ---- Existing Python / IDF ----
     "python-envs.defaultEnvManager": "ms-python.python:conda",
     "python-envs.defaultPackageManager": "ms-python.python:conda",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "idf.pythonInstallPath": "C:\\Espressif\\tools\\idf-python\\3.11.2\\python.exe",
+
+    // ---- Embedded MSYS2 MinGW64 terminal ----
+    "terminal.integrated.profiles.windows": {
+        "MSYS2 MinGW64": {
+            "path": "C:\\msys64\\usr\\bin\\bash.exe",
+            "args": ["-l"],  // loads MinGW64 environment
+            "env": {
+                "MSYSTEM": "MINGW64",
+                "CHERE_INVOKING": "1"
+            },
+            "icon": "terminal-bash"
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "MSYS2 MinGW64",
+
+    // ---- Misc terminal behavior ----
+    "terminal.integrated.shellIntegration.enabled": true,
+    "terminal.integrated.scrollback": 10000,
+
+    // ---- C/C++ IntelliSense ----
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/TinyML/Target/src",
+        "${workspaceFolder}/TinyML/unity/src"
+    ],
+    "C_Cpp.default.compilerPath": "C:\\msys64\\mingw64\\bin\\g++.exe",
+    "C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
+
+    // ---- Python fallback ----
+    "python.defaultInterpreterPath": "python",
+    "python.terminal.activateEnvironment": true,
+    "cmake.sourceDirectory": "C:/Users/Matthew/embeddedResearchML/TinyML"
 }
