@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import math
 import os
 
 model = tf.keras.models.load_model(r"C:\Users\Matthew\embeddedResearchML\TinyML\model.keras")
@@ -45,16 +46,12 @@ with open(model_layers, "w") as f:
 with open(lut_file, "w") as f:
     f.write("// Exponential Lookup Table\n")
     f.write("#include <stdint.h>\n\n")
-    x_min, x_max, step = -8, 8, 0.25
-    xs = np.arange(x_min, x_max + step, step)
-    ys = np.exp(xs)
+    x_min, x_max, step = -8, 8, int(0.25 * 256)
+    vals = [round(math.exp(-8 + 0.25*i)*256) for i in range(65)]
 
-    scale = 127 / np.max(ys)      # normalize to int8 range
-    ys_q = np.round(ys * scale).astype(np.uint8)
-
-    f.write(f"#define EXP_MIN {x_min}f\n")
-    f.write(f"#define EXP_STEP {step}f\n")
-    f.write(f"#define EXP_SIZE {len(xs)}\n")
-    f.write("static const uint8_t exp_lut[EXP_SIZE] = {\n")
-    f.write(", ".join(map(str, ys_q)) + "};\n")
+    f.write(f"#define EXP_MIN {x_min}\n")
+    f.write(f"#define EXP_STEP_Q8 {step}\n")
+    f.write(f"#define EXP_SIZE {len(vals)}\n")
+    f.write("static const uint32_t exp_lut[EXP_SIZE] = {\n")
+    f.write(", ".join(map(str, vals)) + "};\n")
 
