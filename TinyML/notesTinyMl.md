@@ -81,7 +81,7 @@
   - Implemented as an inline function using integer math and clamping.
 - **Softmax:**
   - Converts logits into probabilities.
-  - Fully integer-only implementation: all operations (max, exp, sum, normalization) are performed using fixed-point math (Q8, scaled by 256).
+  - Fully integer-only implementation: all operations (max, exp, sum, normalization) are performed using fixed-point math (Q16, scaled by 65536).
   - Uses an exponential lookup table (LUT) with linear interpolation for efficiency and accuracy.
   - In-place operation: logits array is overwritten with softmax probabilities (range 0–255, sum ≈ 255).
 - **Others (future):**
@@ -95,7 +95,7 @@
 - Contains:
   - Clamp, max, min macros.
   - Integer saturation helpers.
-  - Exponential approximation with lookup table + interpolation (Q8 fixed-point).
+  - Exponential approximation with lookup table + interpolation (Q16 fixed-point).
   - All helpers are designed for integer-only operation (no float required).
 
 ---
@@ -120,7 +120,7 @@
   - `EXP_MIN`: lower bound of sampled range.
   - `EXP_STEP`: spacing between adjacent samples.
   - `EXP_SIZE`: total number of table entries.
-  - `EXP_MIN_Q8`, `EXP_MAX_Q8`, `EXP_STEP_Q8`: Q8 fixed-point versions for integer math.
+  - `EXP_MIN_Q16`, `EXP_MAX_Q16`, `EXP_STEP_Q16`: Q16 fixed-point versions for integer math.
 - Table values:
   - Start near 0 for negative inputs (e.g., e⁻⁸ ≈ 0).
   - Rise exponentially toward max for large positives.
@@ -128,9 +128,9 @@
 ### Runtime Behavior
 
 1. Input `x` is **clamped** to table range.
-2. Compute fractional index between nearest samples (Q8 math).
+2. Compute fractional index between nearest samples (Q16 math).
 3. **Linearly interpolate** between two LUT values for smooth output.
-4. Return approximated exponential in Q8 fixed-point.
+4. Return approximated exponential in Q16 fixed-point.
 
 ### Design Details
 
@@ -167,9 +167,10 @@
 - ✅ Manual quantization tested and working.
 - ✅ Inference runtime modularized and functional.
 - ✅ ReLU activation implemented (integer-only).
-- ✅ Exponential lookup table + interpolation integrated (Q8 fixed-point).
+- ✅ Exponential lookup table + interpolation integrated (Q16 fixed-point).
 - ✅ Utility macros established for math operations.
 - ✅ Integer-only softmax implemented and tested (in-place, no float).
+- ✅ Unity-based TDD tests for activations and exp approximation (including parameterized tests).
 - 🚧 Next: deploy on MCU and measure performance + precision.
 
 ---
@@ -182,5 +183,6 @@
 4. Extend runtime for the Lorenz system model.
 5. Benchmark latency, memory use, and MSE.
 6. Package workflow into a reproducible embedded-ML template.
+7. Expand and maintain Unity TDD coverage for all math and inference modules.
 
 ---

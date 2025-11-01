@@ -46,12 +46,16 @@ with open(model_layers, "w") as f:
 with open(lut_file, "w") as f:
     f.write("// Exponential Lookup Table\n")
     f.write("#include <stdint.h>\n\n")
-    x_min, x_max, step = -8, 8, int(0.25 * 256)
-    vals = [round(math.exp(-8 + 0.25*i)*256) for i in range(65)]
+    Q16 = 65536
+    x_min, x_max = -8, 8
+    vals = [round(math.exp(-8 + 0.25*i)*65536) for i in range(65)]
 
+    f.write(f"#define Q16 {Q16}\n")
     f.write(f"#define EXP_MIN {x_min}\n")
-    f.write(f"#define EXP_STEP_Q8 {step}\n")
     f.write(f"#define EXP_SIZE {len(vals)}\n")
+    f.write(f"#define EXP_STEP_Q16 ({Q16 >> 2})\n")
+    f.write(f"#define EXP_MIN_Q16 ((int32_t)(EXP_MIN * 65536)) // -8 * 65536\n")
+    f.write(f"#define EXP_MAX_Q16 (EXP_MIN_Q16 + (EXP_SIZE - 1) * EXP_STEP_Q16) // -524288 + 64*16384 = +524288\n\n")
     f.write("static const uint32_t exp_lut[EXP_SIZE] = {\n")
     f.write(", ".join(map(str, vals)) + "};\n")
 

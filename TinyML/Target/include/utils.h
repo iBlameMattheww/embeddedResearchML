@@ -10,20 +10,18 @@
 #define MIN(a, b)          ((a) < (b) ? (a) : (b))
 #define LENGTH(arr)      (sizeof(arr) / sizeof(arr[0]))
 
-static inline int32_t Exp_Approx(float x_q8) {
-    if (x_q8 <= EXP_MIN_Q8) return exp_lut[0];
-    if (x_q8 >= EXP_MAX_Q8) return exp_lut[EXP_SIZE - 1];
+static inline int32_t Exp_Approx(int32_t x_q16) {
+    if (x_q16 <= EXP_MIN_Q16) return exp_lut[0];
+    if (x_q16 >= EXP_MAX_Q16) return exp_lut[EXP_SIZE - 1];
 
-    // Integer index = (x - min)/step
-    int32_t index_q8 = (x_q8 - EXP_MIN_Q8) / EXP_STEP_Q8;
-    int i = index_q8; // integer part
-    int32_t frac_q8 = (x_q8 - (EXP_MIN_Q8 + i * EXP_STEP_Q8)) * 256 / EXP_STEP_Q8; // 0–256 range
+    int32_t idx = (x_q16 - EXP_MIN_Q16) / EXP_STEP_Q16;      // integer index
+    int32_t base_x = EXP_MIN_Q16 + idx * EXP_STEP_Q16;
+    int32_t frac_q16 = ((x_q16 - base_x) << 16) / EXP_STEP_Q16; // 0..65535
 
-    uint32_t y0 = exp_lut[i];
-    uint32_t y1 = exp_lut[i+1];
+    uint32_t y0 = exp_lut[idx];
+    uint32_t y1 = exp_lut[idx + 1];
 
-    // Linear interpolation: y = y0 + (y1 - y0) * frac/256
-    return y0 + ((int64_t)(y1 - y0) * frac_q8 >> 8);
+    return (int32_t)(y0 + (((int64_t)(y1 - y0) * frac_q16) >> 16));
 }
 
 #endif
