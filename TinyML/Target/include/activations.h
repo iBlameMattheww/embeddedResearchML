@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-uint8_t Relu(int8_t x);
-int8_t Softmax(int8_t x []);
+uint16_t Relu(int16_t x);
+void Softmax(int16_t x [], uint8_t length);
 
 #endif
