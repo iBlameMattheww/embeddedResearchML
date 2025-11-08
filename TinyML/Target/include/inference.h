@@ -2,16 +2,15 @@
 #define INFERENCE_H
 #include <stdint.h>
 
-typedef struct 
+
+
+typedef struct
 {
-    struct
-    {
-        const int8_t* weights;
-        const int16_t* biases;
-        int inputSize;
-        int outputSize;
-    } _private; 
+    int16_t *inputBuffer;
+    int16_t *outputBuffer;
+    model_t *model;
 } inference_t;
+
 
 void inference_Init(inference_t* instance);
 
