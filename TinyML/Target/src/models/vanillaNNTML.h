@@ -33,8 +33,6 @@ typedef struct
     } _private;
 } model_t;
 
-// void vanillaNNTML_infer(model_t *model, int16_t *input, int16_t *output);
-
-void vanillaNNTML_init(model_t *model, int16_t *input, int16_t *output);
+void VanillaNNTML_init(model_t *model, int16_t *input, int16_t *output);
 
 #endif

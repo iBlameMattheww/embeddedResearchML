@@ -1,7 +1,7 @@
 #ifndef INFERENCE_H
 #define INFERENCE_H
 #include <stdint.h>
-
+#include "vanillaNNTML.h"
 
 
 typedef struct

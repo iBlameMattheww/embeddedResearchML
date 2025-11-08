@@ -1,7 +1,7 @@
 #include "vanillaNNTML.h"
 #define MAX_LAYER_SIZE 32
 
-static void vanillaNNTML_infer(model_t *model, int16_t *input, int16_t *output)
+static void VanillaNNTML_infer(model_t *model, int16_t *input, int16_t *output)
 {
     int16_t bufferA[MAX_LAYER_SIZE];
     int16_t bufferB[MAX_LAYER_SIZE];
@@ -39,14 +39,14 @@ static void vanillaNNTML_infer(model_t *model, int16_t *input, int16_t *output)
         
     }
     for (uint8_t o = 0; 
-        o < model->_private.layers[model->_private.numLayers-1]._private.outputSize;
+        o < model->_private.layers[model->_private.numLayers - 1]._private.outputSize;
         o++) 
     {
         output[o] = src[o];
     }
 }
 
-void vanillaNNTML_init(model_t *model, int16_t *input, int16_t *output)
+void VanillaNNTML_init(model_t *model, int16_t *input, int16_t *output)
 {
     static layer_t layers[3];
 
@@ -74,5 +74,5 @@ void vanillaNNTML_init(model_t *model, int16_t *input, int16_t *output)
     model->_private.layers = layers;
     model->_private.numLayers = 3;
 
-    vanillaNNTML_infer(model, input, output); // Warm-up call (if needed)
+    VanillaNNTML_infer(model, input, output); // Warm-up call (if needed)
 }
