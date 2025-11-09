@@ -6,12 +6,13 @@
 
 typedef struct
 {
-    int16_t *inputBuffer;
-    int16_t *outputBuffer;
-    model_t *model;
+    struct{    
+        int16_t *inputBuffer;
+        int16_t *outputBuffer;
+        model_t *model;
+    } _private;
 } inference_t;
 
-
-void inference_Init(inference_t* instance);
+void Inference_Init(inference_t* instance);
 
 #endif
