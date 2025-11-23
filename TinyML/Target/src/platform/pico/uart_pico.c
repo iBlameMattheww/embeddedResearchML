@@ -53,8 +53,8 @@ void Uart_Init()
     IO_BANK0->GPIO[0].CTRL = GPIO_FUNC_UART;
     IO_BANK0->GPIO[1].CTRL = GPIO_FUNC_UART;
 
-    UART0->IBRD = 26;  
-    UART0->FBRD = 3;
+    UART0->IBRD = 312;  
+    UART0->FBRD = 32;
     UART0->LCR_H = (3 << 5);
 
     UART0->CR = (1 << 0) | (1 << 8) | (1 << 9);

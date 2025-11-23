@@ -1,8 +1,0 @@
-C:/Users/Matthew/embeddedResearchML/build/CMakeFiles/edit_cache.dir
-C:/Users/Matthew/embeddedResearchML/build/CMakeFiles/rebuild_cache.dir
-C:/Users/Matthew/embeddedResearchML/build/Target/src/CMakeFiles/tinyml_core.dir
-C:/Users/Matthew/embeddedResearchML/build/Target/src/CMakeFiles/edit_cache.dir
-C:/Users/Matthew/embeddedResearchML/build/Target/src/CMakeFiles/rebuild_cache.dir
-C:/Users/Matthew/embeddedResearchML/build/tests/CMakeFiles/tinyml_tests.dir
-C:/Users/Matthew/embeddedResearchML/build/tests/CMakeFiles/edit_cache.dir
-C:/Users/Matthew/embeddedResearchML/build/tests/CMakeFiles/rebuild_cache.dir
