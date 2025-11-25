@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.integrate import odeint
+import os
 
 
 def LorenzSystem(state, t, sigma, beta, rho):
@@ -22,7 +23,10 @@ def generateLorenzData(samples):
         data = np.stack([xSolved, ySolved, zSolved], axis=1)
         totalData.append(data)
     totalData = np.array(totalData)
-    np.save('C:\\Users\\Matthew\\Downloads\\lorenz_trajectories200.npy', totalData)
+    # Save to local data folder
+    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    os.makedirs(data_dir, exist_ok=True)
+    np.save(os.path.join(data_dir, 'lorenz_trajectories500.npy'), totalData)
 
 
 

@@ -8,3 +8,4 @@ _deps/
 *.map
 *.dSYM/
 unity/
+lorenzSystemSimulator/data/lorenz_trajectories*.npy
