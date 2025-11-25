@@ -9,3 +9,4 @@ _deps/
 *.dSYM/
 unity/
 lorenzSystemSimulator/data/lorenz_trajectories*.npy
+.venv/
