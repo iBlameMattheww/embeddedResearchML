@@ -1,0 +1,10 @@
+build/
+pico-sdk/
+_deps/
+*.uf2
+*.elf
+*.bin
+*.hex
+*.map
+*.dSYM/
+unity/
