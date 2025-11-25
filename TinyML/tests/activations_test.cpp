@@ -46,12 +46,21 @@ void Test_Exp_Approx_Full_Range(void)
     for (int32_t x_q16 = min_q16; x_q16 <= max_q16; x_q16 += step) {
         float x = x_q16 / 65536.0f;
         float expected = std::exp(x);
-        int32_t actual_q16 = Exp_Approx(x_q16);
-        float actual = actual_q16 / 65536.0f;
-        float rel_error = fabsf(actual - expected) / expected;
-        if (rel_error >= 0.035) {
-            printf("FAIL: x=%f (q16=%d), expected=%f, actual=%f, rel_error=%f\n", x, x_q16, expected, actual, rel_error);
-            UNITY_TEST_FAIL(__LINE__, "Exp_Approx relative error too high");
+        float actual = Exp_Approx(x_q16) / 65536.0f;
+
+        float abs_err = fabsf(actual - expected);
+        float rel_err = fabsf(actual - expected) / expected;
+
+        // absolute error OK for tiny exp(-x)
+        bool ok_abs = abs_err < 1e-4f;
+
+        // relative error OK for normal values
+        bool ok_rel = rel_err < 0.008f;
+
+        if (!(ok_abs || ok_rel)) {
+            printf("FAIL: x=%f expected=%f actual=%f abs_err=%f rel_err=%f\n",
+                   x, expected, actual, abs_err, rel_err);
+            UNITY_TEST_FAIL(__LINE__, "Exp_Approx error too high");
         }
     }
 }

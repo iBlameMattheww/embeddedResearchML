@@ -42,7 +42,7 @@ all: $(OUT)
 # --- Build Unity as a static library ---
 $(UNITY_LIB): $(UNITY_SRC)
 	@mkdir -p $(BUILD_DIR)
-	$(CC) -c $(UNITY_SRC) $(INCLUDES) -o $(BUILD_DIR)/unity.o
+	gcc -c $(UNITY_SRC) $(INCLUDES) -o $(BUILD_DIR)/unity.o
 	$(AR) rcs $@ $(BUILD_DIR)/unity.o
 
 # --- Build and link test executable ---

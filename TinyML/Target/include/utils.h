@@ -17,24 +17,24 @@ static inline int32_t Exp_Approx(int32_t x_q16)
     if (x_q16 >= EXP_MAX_Q16)
         return exp_lut[EXP_SIZE - 1];
 
-    // LUT index
+    // FLOOR 
     int32_t idx = (x_q16 - EXP_MIN_Q16) / EXP_STEP_Q16;
+
     int32_t base_x = EXP_MIN_Q16 + idx * EXP_STEP_Q16;
+    int32_t delta  = x_q16 - base_x;
 
-    // delta in Q16, 0..EXP_STEP_Q16
-    int32_t delta = x_q16 - base_x;
-
-    // frac in Q16: 0..~65535, NO division needed because step = 2^14
-    int32_t frac_q16 = delta << 2;  // (delta << 16) / 16384
+    // frac in Q16
+    int32_t frac_q16 = (delta << 16) / EXP_STEP_Q16;
 
     uint32_t y0 = exp_lut[idx];
     uint32_t y1 = exp_lut[idx + 1];
 
-    int32_t dy     = (int32_t)y1 - (int32_t)y0;
-    int32_t interp = (dy * frac_q16) >> 16;  // all 32-bit
+    int32_t dy = (int32_t)y1 - (int32_t)y0;
 
-    return (int32_t)(y0 + interp);
+    // Use 64-bit multiply to be safe
+    int32_t interp = ((int64_t)dy * frac_q16) >> 16;
+
+    return y0 + interp;
 }
-
 
 #endif

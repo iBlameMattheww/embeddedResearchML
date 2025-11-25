@@ -4,6 +4,6 @@
 #include "activations.h"
 #include "inference.h"
 
-void main();
+int main();
 
 #endif 
