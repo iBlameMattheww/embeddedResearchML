@@ -10,6 +10,7 @@ pico_sdk_init()
 
 add_executable(pico_main
     TinyML/Target/src/main.c
+    TinyML/Target/src/heartbeat.c
 )
 
 
