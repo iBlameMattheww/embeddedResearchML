@@ -10,3 +10,6 @@ _deps/
 unity/
 lorenzSystemSimulator/data/lorenz_trajectories*.npy
 .venv/
+.TinyML/build/
+*.a
+*.dSYM/

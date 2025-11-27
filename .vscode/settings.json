@@ -37,6 +37,7 @@
     "cmake.sourceDirectory": "C:/Users/Matthew/embeddedResearchML/TinyML",
     "files.associations": {
         "dense_0.h": "c",
-        "dense_1.h": "c"
+        "dense_1.h": "c",
+        "*.inc": "cpp"
     }
 }

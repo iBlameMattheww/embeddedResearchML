@@ -34,7 +34,7 @@ void Test_Exp_Approx_0(void)
     int32_t actual_q16 = Exp_Approx(0 * 65536); // Q16 fixed-point result
     double actual = actual_q16 / 65536.0;
     double rel_error = std::abs(actual - expected) / expected;
-    TEST_ASSERT_TRUE(rel_error < 0.02); // 2% tolerance
+    TEST_ASSERT_TRUE(rel_error < 0.0001); // 0.1% tolerance
 }
 
 void Test_Exp_Approx_Full_Range(void)
