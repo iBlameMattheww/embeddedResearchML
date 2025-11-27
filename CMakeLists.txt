@@ -5,6 +5,8 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 project(embeddedResearchML C CXX ASM)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Initialize the SDK
 pico_sdk_init()
 

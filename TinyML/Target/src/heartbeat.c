@@ -9,7 +9,7 @@ static bool ToggleLed(repeating_timer_t *rt)
     return true;
 }
 
-void heartbeat_init() {
+void Heartbeat_init() {
     const uint LED_PIN = HEARTBEAT_DEFAULT_LED_PIN;
     const uint INTERVAL_MS = HEARTBEAT_DEFAULT_INTERVAL_MS;
 

@@ -17,6 +17,6 @@ typedef struct
 } heartbeat_t;
 
 
-void heartbeat_init();
+void Heartbeat_init();
 
 #endif // HEARTBEAT_H

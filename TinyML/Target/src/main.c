@@ -5,7 +5,7 @@
 
 int main() {
     stdio_init_all();
-    heartbeat_init();
+    Heartbeat_init();
 
     while (true) {
         printf("HELLO USB CDC\n");
@@ -13,3 +13,4 @@ int main() {
     }
     return 0;
 }
+
