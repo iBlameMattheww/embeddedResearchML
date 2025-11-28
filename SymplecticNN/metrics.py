@@ -1,0 +1,1 @@
+# MSE loss, Energy drift (H(x_t) - H(x_0)), long-term trajectory divergence, Lyapunov-like metrics

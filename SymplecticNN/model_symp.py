@@ -1,0 +1,1 @@
+# SymplecticNN class (stacking layers, dt handling)

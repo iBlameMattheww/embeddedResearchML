@@ -1,0 +1,1 @@
+# Training loop (For my 3070 PC ONLY)
