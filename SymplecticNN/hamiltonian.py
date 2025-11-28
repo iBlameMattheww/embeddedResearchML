@@ -26,7 +26,7 @@ class HamiltonianNN(nn.Module):
                 if layer.bias is not None:
                     nn.init.zeros_(layer.bias)
     
-    def Forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """ 
         Forward pass through the Hamiltonian network.
         Args:

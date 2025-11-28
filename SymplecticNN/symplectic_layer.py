@@ -2,6 +2,8 @@
 import torch
 import torch.nn as nn
 
+from .hamiltonian import HamiltonianNN
+
 class SymplecticLayer(nn.Module):
 
     """
@@ -15,10 +17,24 @@ class SymplecticLayer(nn.Module):
         z_next = symplectic_step(z)
     """
 
-    def __init__(self, hamiltonian_nn: nn.Module, dt : float = 0.01):
+    def __init__(
+            self,
+            latentDim: int = 8,
+            hiddenDim: int = 128,
+            numHiddenLayers: int = 2,
+            dt: float = 0.01,
+            numSteps: int = 1
+    ):
         super().__init__()
-        self.hamiltonianNN = hamiltonian_nn
+        self.latentDim = latentDim
         self.dt = dt
+        self.numSteps = numSteps
+
+        self.hamiltonianNN = HamiltonianNN(
+            dim = latentDim,
+            hiddenSize = hiddenDim,
+            numHiddenLayers = numHiddenLayers
+        )
 
     def GradH(self, z):
 
@@ -36,7 +52,7 @@ class SymplecticLayer(nn.Module):
         )[0]
         return grad
     
-    def Forward(self, z):
+    def forward(self, z):
 
         """
         Performs one symplectic leapfrog integration step.
@@ -44,16 +60,19 @@ class SymplecticLayer(nn.Module):
         """
 
         q, p = torch.chunk(z, 2, dim = 1)
-        gradH = self.GradH(z)
-        dHdq, dHdp = torch.chunk(gradH, 2, dim = 1)
+        dt = self.dt
 
-        pHalf = p - 0.5 * self.dt * dHdq
-        qNew = q + self.dt * pHalf
+        for step in range(self.numSteps):
+            gradH = self.GradH(torch.cat([q, p], dim = 1))
+            dHdq, dHdp = torch.chunk(gradH, 2, dim = 1)
 
-        zHalf = torch.cat([qNew, pHalf], dim = 1)
-        gradHNew = self.GradH(zHalf)
-        dHdqNew, dHdpNew = torch.chunk(gradHNew, 2, dim = 1)
-
-        pNew = pHalf - 0.5 * self.dt * dHdqNew
-        zNew = torch.cat([qNew, pNew], dim = 1)
-        return zNew
+            pHalf = p - 0.5 * dt * dHdq
+            qNew = q + dt * dHdp
+            
+            gradHNew = self.GradH(torch.cat([qNew, pHalf], dim = 1))
+            dHdqNew, _ = torch.chunk(gradHNew, 2, dim = 1)
+            
+            pNew = pHalf - 0.5 * dt * dHdqNew
+            q, p = qNew, pNew
+        
+        return torch.cat([q, p], dim = 1)
