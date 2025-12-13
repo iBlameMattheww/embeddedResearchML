@@ -1,54 +1,61 @@
-# Simple Harmonic Oscillator (SHO) Simulator Notes
+# Simple Harmonic Oscillator (SHO) Simulator
 
-## System Definition
+## System Overview
 
 We simulate a 1D simple harmonic oscillator in **phase space** with state:
 
-\[
+$$
 (x(t), y(t))
-\]
+$$
 
 where:
-- \(x(t)\) = position
-- \(y(t)\) = momentum (or velocity since \(m = 1\))
+- $x(t)$ is the **position**
+- $y(t)$ is the **velocity** (or momentum since $m = 1$)
 
-The governing equations are:
+---
 
-\[
+## Governing Equations
+
+The continuous-time dynamics are:
+
+$$
 \dot{x} = y
-\]
-\[
+$$
+
+$$
 \dot{y} = -x
-\]
+$$
 
-This corresponds to a Hamiltonian:
+These equations correspond to the Hamiltonian:
 
-\[
-H(x,y) = \tfrac{1}{2}(x^2 + y^2)
-\]
+$$
+H(x, y) = \tfrac{1}{2}(x^2 + y^2)
+$$
 
-which is conserved.
+The Hamiltonian is conserved over time.
 
 ---
 
 ## Phase Space Interpretation
 
 - The system evolves in **phase space**, not physical space.
-- Each point \((x,y)\) represents the full state at one time.
-- The trajectory forms a **closed circular orbit**.
+- Each point $(x, y)$ represents the full system state at one time.
+- Trajectories form **closed circular orbits**.
 - Each orbit corresponds to a constant energy level.
 
 ---
 
 ## Initial Conditions
 
-For each trajectory:
-\[
+For each trajectory, initial conditions are sampled as:
+
+$$
 x_0 \sim \mathcal{U}(-1, 1)
-\]
-\[
+$$
+
+$$
 y_0 \sim \mathcal{U}(-1, 1)
-\]
+$$
 
 Different initial conditions produce circles of different radii.
 
@@ -56,49 +63,70 @@ Different initial conditions produce circles of different radii.
 
 ## Time Parameters
 
-- Natural frequency: \(\omega = 1\)
-- Period:  
-  \[
-  T = 2\pi
-  \]
+The natural frequency is $\omega = 1$.
+
+The oscillation period is:
+
+$$
+T = 2\pi
+$$
 
 Simulation parameters:
-- Total time: \(T = 2\pi\)
-- Number of steps: 500
-- Time step: \(\Delta t = T / (N - 1)\)
+- Total time: $T = 2\pi$
+- Number of steps: $N = 500$
+- Time step:
+
+$$
+\Delta t = \frac{T}{N - 1}
+$$
 
 ---
 
-## Numerical Integration
+## Numerical Integration: Velocity Verlet
 
-We use **Velocity Verlet**, a symplectic (leapfrog) integrator:
+The simple harmonic oscillator satisfies the second-order equation
 
-1. Half-step momentum update:
-\[
+$$
+\ddot{x} = -x
+$$
+
+which corresponds to the force
+
+$$
+F(x) = -x.
+$$
+
+Given the state $(x_k, y_k)$ at time $t_k$, where $y_k = \dot{x}_k$, the Velocity Verlet update is defined by the following steps.
+
+First, the velocity is updated by a half step:
+
+$$
 y_{k+\frac{1}{2}} = y_k - \frac{\Delta t}{2} x_k
-\]
+$$
 
-2. Full-step position update:
-\[
+Next, the position is updated by a full step:
+
+$$
 x_{k+1} = x_k + \Delta t \, y_{k+\frac{1}{2}}
-\]
+$$
 
-3. Half-step momentum update:
-\[
+Finally, the velocity is updated by another half step:
+
+$$
 y_{k+1} = y_{k+\frac{1}{2}} - \frac{\Delta t}{2} x_{k+1}
-\]
+$$
 
-Properties:
-- Symplectic (preserves phase-space volume)
-- Time-reversible
-- Bounded energy error
-- Suitable for long-term rollouts
+Velocity Verlet is a symplectic, time-reversible, second-order integrator.  
+It preserves phase-space structure and produces bounded energy error over long simulations.
+
 
 ---
 
 ## Visualization
 
 Phase-space plots use:
+
 ```python
 plt.plot(x, y)
 plt.axis("equal")
+
