@@ -10,7 +10,7 @@ PARAMS_PATH = os.path.join(CURRENT_DIR, 'params')
 PARAMS_PATH = os.path.join(PARAMS_PATH, 'sympnet_params.json')
 DATASET_PATH = os.path.join("SimpleHarmonicOscillator", "data", "sho_trajectories.npy")
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cpu")
 print("[INFO] Using device:", DEVICE)
 
 EPOCHS = 1000
@@ -25,10 +25,6 @@ sympnet = SympNet(
 def LoadDataset(path, dt, train_frac = 0.8):
     data = np.load(path) # shape (samples, timesteps, 2)
     data = data[:, : , [1, 0]]  # swap to (p, q) ordering
-
-    mean = data.mean(axis=(0,1), keepdims=True)
-    std = data.std(axis=(0,1), keepdims=True)
-    data = (data - mean) / std
 
     N = data.shape[0]
     split = int(N * train_frac)
@@ -55,7 +51,7 @@ def LoadDataset(path, dt, train_frac = 0.8):
 dt = 0.05
 x0, x1, dt_train, x0_test, x1_test, dt_test = LoadDataset(DATASET_PATH, dt)
 
-sympnet.to(DEVICE)
+sympnet.double().to(DEVICE)
 x0 = x0.to(DEVICE)
 x1 = x1.to(DEVICE)
 dt_train = dt_train.to(DEVICE)
