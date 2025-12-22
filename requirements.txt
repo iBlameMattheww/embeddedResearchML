@@ -4,3 +4,5 @@ tensorflow
 matplotlib
 scikit-learn
 scipy
+strupnet
+pyserial

@@ -3,6 +3,7 @@
 
 #include "activations.h"
 #include "inference.h"
+#include "heartbeat.h"
 
 int main();
 

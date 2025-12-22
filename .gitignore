@@ -13,3 +13,4 @@ lorenzSystemSimulator/data/lorenz_trajectories*.npy
 .TinyML/build/
 *.a
 *.dSYM/
+.vscode/
