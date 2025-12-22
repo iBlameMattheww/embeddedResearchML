@@ -5,12 +5,12 @@
 We simulate a 1D simple harmonic oscillator in **phase space** with state:
 
 $$
-(x(t), y(t))
+(q(t), p(t))
 $$
 
 where:
-- $x(t)$ is the **position**
-- $y(t)$ is the **velocity** (or momentum since $m = 1$)
+- $q(t)$ is the **position**
+- $p(t)$ is the **momentum** (for $m = 1$, $p = \dot{q}$)
 
 ---
 
@@ -19,17 +19,17 @@ where:
 The continuous-time dynamics are:
 
 $$
-\dot{x} = y
+\dot{q} = p
 $$
 
 $$
-\dot{y} = -x
+\dot{p} = -q
 $$
 
 These equations correspond to the Hamiltonian:
 
 $$
-H(x, y) = \tfrac{1}{2}(x^2 + y^2)
+H(q, p) = \tfrac{1}{2}(q^2 + p^2)
 $$
 
 The Hamiltonian is conserved over time.
@@ -39,7 +39,7 @@ The Hamiltonian is conserved over time.
 ## Phase Space Interpretation
 
 - The system evolves in **phase space**, not physical space.
-- Each point $(x, y)$ represents the full system state at one time.
+- Each point $(q, p)$ represents the full system state at one time.
 - Trajectories form **closed circular orbits**.
 - Each orbit corresponds to a constant energy level.
 
@@ -50,11 +50,11 @@ The Hamiltonian is conserved over time.
 For each trajectory, initial conditions are sampled as:
 
 $$
-x_0 \sim \mathcal{U}(-1, 1)
+q_0 \sim \mathcal{U}(-1, 1)
 $$
 
 $$
-y_0 \sim \mathcal{U}(-1, 1)
+p_0 \sim \mathcal{U}(-1, 1)
 $$
 
 Different initial conditions produce circles of different radii.
@@ -87,38 +87,37 @@ $$
 The simple harmonic oscillator satisfies the second-order equation
 
 $$
-\ddot{x} = -x
+\ddot{q} = -q
 $$
 
 which corresponds to the force
 
 $$
-F(x) = -x.
+F(q) = -q.
 $$
 
-Given the state $(x_k, y_k)$ at time $t_k$, where $y_k = \dot{x}_k$, the Velocity Verlet update is defined by the following steps.
+Given the state $(q_k, p_k)$ at time $t_k$, where $p_k = \dot{q}_k$, the Velocity Verlet update is defined by the following steps.
 
-First, the velocity is updated by a half step:
+First, the momentum is updated by a half step:
 
 $$
-y_{k+\frac{1}{2}} = y_k - \frac{\Delta t}{2} x_k
+p_{k+\frac{1}{2}} = p_k - \frac{\Delta t}{2} q_k
 $$
 
 Next, the position is updated by a full step:
 
 $$
-x_{k+1} = x_k + \Delta t \, y_{k+\frac{1}{2}}
+q_{k+1} = q_k + \Delta t \, p_{k+\frac{1}{2}}
 $$
 
-Finally, the velocity is updated by another half step:
+Finally, the momentum is updated by another half step:
 
 $$
-y_{k+1} = y_{k+\frac{1}{2}} - \frac{\Delta t}{2} x_{k+1}
+p_{k+1} = p_{k+\frac{1}{2}} - \frac{\Delta t}{2} q_{k+1}
 $$
 
 Velocity Verlet is a symplectic, time-reversible, second-order integrator.  
 It preserves phase-space structure and produces bounded energy error over long simulations.
-
 
 ---
 
@@ -127,6 +126,7 @@ It preserves phase-space structure and produces bounded energy error over long s
 Phase-space plots use:
 
 ```python
-plt.plot(x, y)
+plt.plot(q, p)
 plt.axis("equal")
+```
 
