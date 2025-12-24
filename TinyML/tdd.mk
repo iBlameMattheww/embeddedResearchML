@@ -26,7 +26,7 @@ UNITY_SRC  := $(wildcard $(UNITY_DIR)/*.c)
 SRC_FILES  := \
     $(SRC_DIR)/activations.c \
     $(SRC_DIR)/inference.c \
-    $(MODEL_DIR)/vanillaNNTML.c
+    $(MODEL_DIR)/Sympnet.c \
 
 TEST_FILES := $(wildcard $(TEST_DIR)/*.cpp)
 

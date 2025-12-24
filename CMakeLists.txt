@@ -18,7 +18,7 @@ add_executable(pico_main
 
 target_include_directories(pico_main PRIVATE
     TinyML/Target/include
-    TinyML/Target/include/exported_weights
+    TinyML/Target/include/SNN_ExportedParams
     TinyML/Target/src
     TinyML/Target/src/models
     TinyML/Target/tools

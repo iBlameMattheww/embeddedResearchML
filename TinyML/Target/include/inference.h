@@ -1,7 +1,6 @@
 #ifndef INFERENCE_H
 #define INFERENCE_H
 #include <stdint.h>
-#include "vanillaNNTML.h"
 
 
 typedef struct
@@ -9,7 +8,6 @@ typedef struct
     struct{    
         int16_t *inputBuffer;
         int16_t *outputBuffer;
-        model_t *model;
     } _private;
 } inference_t;
 

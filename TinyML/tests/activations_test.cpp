@@ -3,16 +3,6 @@
 #include "utils.h"
 #include <cmath>
 
-void setUp(void) 
-{
-    // Optional: code to run before each test
-}
-
-void tearDown(void) 
-{
-    // Optional: code to run after each test
-}
-
 void Test_Relu_Positive(void) 
 {
     TEST_ASSERT_EQUAL_UINT8(5, Relu(5));
@@ -107,19 +97,4 @@ void test_Softmax_LargeValues_NoOverflow(void)
 
     uint16_t sum = logits[0] + logits[1] + logits[2];
     TEST_ASSERT_INT_WITHIN(2, 255, sum);
-}
-
-int main(void) 
-{
-    UNITY_BEGIN();
-    RUN_TEST(Test_Relu_Positive);
-    RUN_TEST(Test_Relu_Zero);
-    RUN_TEST(Test_Relu_Negative);
-    RUN_TEST(Test_Exp_Approx_0);
-    RUN_TEST(Test_Exp_Approx_Full_Range);
-    RUN_TEST(Test_Softmax_SineDataset_SingleLogit_Returns255);
-    RUN_TEST(test_Softmax_LorenzDataset_3Values_NormalizedAndScaled);
-    RUN_TEST(test_Softmax_NegativeValues_StableNormalization);
-    RUN_TEST(test_Softmax_LargeValues_NoOverflow);
-    return UNITY_END();
 }
