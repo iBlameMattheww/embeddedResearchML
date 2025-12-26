@@ -101,7 +101,7 @@ void Test_SingleLayerSympnetStep(void)
 {
     phaseState_t state = {.p = 65536, .q = 0};
 
-    layer_t layer = {._private = {
+    symplecticLayer_t layer = {._private = {
         .coefficients = (const int16_t[]){-32767},
         .weights = (const int8_t[]){-127, 13},      
         .numCoefficients = 1
@@ -110,6 +110,37 @@ void Test_SingleLayerSympnetStep(void)
     int32_t stepSize = 3277;
 
     SympnetLayerStep(&state, &layer, stepSize);
+
+    TEST_ASSERT_INT32_WITHIN(16, 66197, state.p);
+    TEST_ASSERT_INT32_WITHIN(16, 6464,  state.q);
+}
+
+void Test_MultiLayerSympnetStep(void)
+{
+    phaseState_t state = {.p = 65536, .q = 0};
+
+    symplecticLayer_t layers[1] = {
+     {._private = {
+        .coefficients = (const int16_t[]){-32767},
+        .weights = (const int8_t[]){-127, 13},      
+        .numCoefficients = 1
+    }}
+    };
+
+    symplecticModel_t model = {._private = {
+        .layers = layers,
+        .numLayers = 1
+    }};
+
+    int32_t stepSize = 3277;
+
+    SympnetRollout(&model, &state, stepSize, 1);
+
+    TEST_ASSERT_NOT_EQUAL(65536, state.p);
+    TEST_ASSERT_NOT_EQUAL(0,     state.q);
+
+    TEST_ASSERT_GREATER_THAN(65536, state.p);
+    TEST_ASSERT_GREATER_THAN(0,     state.q);
 
     TEST_ASSERT_INT32_WITHIN(16, 66197, state.p);
     TEST_ASSERT_INT32_WITHIN(16, 6464,  state.q);

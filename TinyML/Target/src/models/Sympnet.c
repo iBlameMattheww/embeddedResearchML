@@ -30,7 +30,7 @@ void SympnetStateUpdate(phaseState_t *state, int32_t scale, const int8_t *weight
     state->q -= (int32_t)(((int64_t)scale * (int64_t)weights[0]) >> WEIGHT_FRACTIONAL_BITS);
 }
 
-void SympnetLayerStep(phaseState_t *state, const layer_t *layer, int32_t stepSize)
+void SympnetLayerStep(phaseState_t *state, const symplecticLayer_t *layer, int32_t stepSize)
 {
     int32_t x[2] = {state->p, state->q};
     int32_t m = Dot_I8_I32_TO_I32(layer->_private.weights, x, 2, WEIGHT_FRACTIONAL_BITS);
@@ -38,5 +38,32 @@ void SympnetLayerStep(phaseState_t *state, const layer_t *layer, int32_t stepSiz
     int32_t scale = SymplecticTimeScale(stepSize, dH);
     SympnetStateUpdate(state, scale, layer->_private.weights);
 }
-// void Symplectic_init(model_t *model, uint8_t numLayers, int32_t stepSize)
-// {}
+
+void SympnetRollout(symplecticModel_t *model, phaseState_t *state, int32_t stepSize, uint8_t numSteps)
+{
+    for (uint8_t step = 0; step < numSteps; step++)
+    {
+        for (uint8_t layerIndex = 0; layerIndex < model->_private.numLayers; layerIndex++)
+        {
+            SympnetLayerStep(state, &model->_private.layers[layerIndex], stepSize);
+        }
+    }
+}
+
+void Symplectic_init(symplecticModel_t *model, uint8_t numLayers, int32_t stepSize)
+{
+    static symplecticLayer_t layers[] = {
+        {._private = {
+            .coefficients = Sympnet_layer_0_a,
+            .weights = Sympnet_layer_0_w,
+            .numCoefficients = COEFFICIENTS_LEN
+        }},
+        {._private = {
+            .coefficients = Sympnet_layer_1_a,
+            .weights = Sympnet_layer_1_w,
+            .numCoefficients = COEFFICIENTS_LEN
+        }}
+    };
+    model->_private.layers = layers;
+    model->_private.numLayers = numLayers;
+}

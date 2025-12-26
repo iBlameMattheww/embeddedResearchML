@@ -2,6 +2,7 @@
 #define SYMPNET_H
 
 #include <stdint.h>
+#include "SNN_Model_layers.h"
 #include "utils.h"
 
 #define WEIGHT_FRACTIONAL_BITS  7
@@ -22,21 +23,22 @@ typedef struct
         const int8_t* weights;
         uint8_t numCoefficients;
     } _private; 
-} layer_t;
+} symplecticLayer_t;
 
 typedef struct 
 {
     struct
     {
-        layer_t *layers;
+        symplecticLayer_t *layers;
         uint8_t numLayers;
     } _private;
-} model_t;
+} symplecticModel_t;
 
 int32_t PolynomialDerivation(const int16_t* coefficients, uint8_t numberOfCoefficients, int32_t m);
 int32_t SymplecticTimeScale(int32_t h, int32_t dH);
 void SympnetStateUpdate(phaseState_t *state, int32_t scale, const int8_t *weights);
-void SympnetLayerStep(phaseState_t *state, const layer_t *layer, int32_t stepSize);
-void Symplectic_init(model_t *model, uint8_t numLayers, int32_t stepSize);
+void SympnetLayerStep(phaseState_t *state, const symplecticLayer_t *layer, int32_t stepSize);
+void SympnetRollout(symplecticModel_t *model, phaseState_t *state, int32_t stepSize, uint8_t numSteps);
+void Symplectic_init(symplecticModel_t *model, uint8_t numLayers, int32_t stepSize);
 
 #endif // SYMPNET_H

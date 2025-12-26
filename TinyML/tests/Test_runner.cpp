@@ -43,6 +43,7 @@ void Test_TypicalStateUpdate(void);
 void Test_ZeroScaleStateUpdate(void);
 void Test_SignBehaviorStateUpdate(void);
 void Test_SingleLayerSympnetStep(void);
+void Test_MultiLayerSympnetStep(void);
 
 int main(void) 
 {
@@ -75,6 +76,7 @@ int main(void)
     RUN_TEST(Test_ZeroScaleStateUpdate);
     RUN_TEST(Test_SignBehaviorStateUpdate);
     RUN_TEST(Test_SingleLayerSympnetStep);
+    RUN_TEST(Test_MultiLayerSympnetStep);
 
     return UNITY_END();
 }
