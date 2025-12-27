@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <math.h>
-#include "exp_lut.h"
+#include "Exp_LUT.h"
 
 #define CLAMP(x, lo, hi)   ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
 #define MAX(a, b)          ((a) > (b) ? (a) : (b))

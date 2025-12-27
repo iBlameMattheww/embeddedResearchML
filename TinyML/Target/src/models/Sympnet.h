@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "SNN_Model_layers.h"
-#include "utils.h"
+#include "Utils.h"
 
 #define WEIGHT_FRACTIONAL_BITS  7
 #define COEFFICIENT_FRACTIONAL_BITS  15

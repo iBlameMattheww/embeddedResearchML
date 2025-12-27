@@ -1,9 +1,9 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "activations.h"
-#include "inference.h"
-#include "heartbeat.h"
+#include "Activations.h"
+#include "SymplecticInference.h"
+#include "Heartbeat.h"
 
 int main();
 

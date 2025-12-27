@@ -1,4 +1,4 @@
-#include "heartbeat.h"
+#include "Heartbeat.h"
 
 static heartbeat_t led = { ._private = { .ledState = false } };
 

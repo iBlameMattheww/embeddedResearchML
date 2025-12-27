@@ -24,8 +24,8 @@ UNITY_SRC  := $(wildcard $(UNITY_DIR)/*.c)
 
 # Explicitly exclude main.c (Unity has its own main)
 SRC_FILES  := \
-    $(SRC_DIR)/activations.c \
-    $(SRC_DIR)/inference.c \
+    $(SRC_DIR)/Activations.c \
+    $(SRC_DIR)/SymplecticInference.c \
     $(MODEL_DIR)/Sympnet.c \
 
 TEST_FILES := $(wildcard $(TEST_DIR)/*.cpp)

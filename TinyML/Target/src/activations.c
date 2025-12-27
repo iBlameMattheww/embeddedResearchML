@@ -1,5 +1,5 @@
-#include "activations.h"
-#include "utils.h"
+#include "Activations.h"
+#include "Utils.h"
 #include <stdio.h>
 
 uint16_t Relu(int16_t x)

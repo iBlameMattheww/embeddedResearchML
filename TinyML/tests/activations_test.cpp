@@ -1,6 +1,6 @@
 #include "unity.h"
-#include "activations.h"
-#include "utils.h"
+#include "Activations.h"
+#include "Utils.h"
 #include <cmath>
 
 void Test_Relu_Positive(void) 
