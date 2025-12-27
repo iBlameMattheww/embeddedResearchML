@@ -11,10 +11,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 pico_sdk_init()
 
 add_executable(pico_main
-    TinyML/Target/src/Main.c
+    TinyML/Target/src/SNN_Main.c
     TinyML/Target/src/Heartbeat.c
     TinyML/Target/src/Serial.c
     TinyML/Target/src/SymplecticInference.c
+    TinyML/Target/src/models/Sympnet.c
 )
 
 

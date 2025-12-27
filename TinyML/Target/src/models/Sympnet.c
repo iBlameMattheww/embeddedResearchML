@@ -39,18 +39,15 @@ void SympnetLayerStep(phaseState_t *state, const symplecticLayer_t *layer, int32
     SympnetStateUpdate(state, scale, layer->_private.weights);
 }
 
-void SympnetRollout(symplecticModel_t *model, phaseState_t *state, int32_t stepSize, uint8_t numSteps)
+void SympnetStep(symplecticModel_t *model, phaseState_t *state, int32_t stepSize)
 {
-    for (uint8_t step = 0; step < numSteps; step++)
+    for (uint8_t layerIndex = 0; layerIndex < model->_private.numLayers; layerIndex++)
     {
-        for (uint8_t layerIndex = 0; layerIndex < model->_private.numLayers; layerIndex++)
-        {
-            SympnetLayerStep(state, &model->_private.layers[layerIndex], stepSize);
-        }
+        SympnetLayerStep(state, &model->_private.layers[layerIndex], stepSize);
     }
 }
 
-void Symplectic_init(symplecticModel_t *model, uint8_t numLayers, int32_t stepSize)
+void Symplectic_Init(symplecticModel_t *model, uint8_t numLayers, int32_t stepSize)
 {
     static symplecticLayer_t layers[] = {
         {._private = {

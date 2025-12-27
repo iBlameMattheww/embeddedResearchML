@@ -2,6 +2,7 @@
 #define SERIAL_H
 
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
 
@@ -29,6 +30,7 @@ typedef struct
 
 void SerialSendDone();
 void SerialSendPhasePacket(int32_t p, int32_t q);
+void SerialCopyPayload(serial_t *serial, void *destination);
 serialCmd_t GetSerialCommand(serial_t *serial);
 bool IsSerialCommandAvailable(serial_t *serial);
 void SerialTask(serial_t *serial);

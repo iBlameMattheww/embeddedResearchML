@@ -4,6 +4,8 @@
 
 enum
 {
+    CommandByte = 1,
+    PayloadLengthByte = 2,
     PayloadBeginByte = 3,
     PhaseCoordinateSize = 4,
     PacketSize = 8,
@@ -27,14 +29,19 @@ void SerialSendPhasePacket(int32_t p, int32_t q)
     tud_cdc_write_flush();
 }
 
+void SerialCopyPayload(serial_t *serial, void *destination)
+{
+    if (!serial->_private.pendingPayloadLength)
+    {
+        return;
+    }
+    memcpy(destination, serial->_private.pendingPayload, serial->_private.pendingPayloadLength);
+}
+
 serialCmd_t GetSerialCommand(serial_t *serial)
 {
     serialCmd_t cmd = serial->_private.command;
-    if (cmd != Cmd_None)
-    {
-        memcpy(serial->_private.rx_Buffer, serial->_private.pendingPayload, serial->_private.pendingPayloadLength);
-        serial->_private.command = Cmd_None;
-    }
+    serial->_private.command = Cmd_None;
     return cmd;
 }
 
@@ -71,7 +78,7 @@ void SerialTask(serial_t *serial)
             }
             else if (serial->_private.rx_Length >= PayloadBeginByte)
             {
-                uint8_t payloadLen = serial->_private.rx_Buffer[2];
+                uint8_t payloadLen = serial->_private.rx_Buffer[PayloadLengthByte];
                 if (payloadLen > PENDING_PAYLOAD_SIZE)
                 {
                     serial->_private.rx_Length = 0;
@@ -79,7 +86,7 @@ void SerialTask(serial_t *serial)
                 }
                 if (serial->_private.rx_Length == PayloadBeginByte + payloadLen)
                 {
-                    serial->_private.command = (serialCmd_t)serial->_private.rx_Buffer[1];
+                    serial->_private.command = (serialCmd_t)serial->_private.rx_Buffer[CommandByte];
                     serial->_private.pendingPayloadLength = payloadLen;
                     memcpy(serial->_private.pendingPayload, &serial->_private.rx_Buffer[PayloadBeginByte], payloadLen);
                     serial->_private.rx_Length = 0;
