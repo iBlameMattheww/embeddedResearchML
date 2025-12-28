@@ -1,28 +1,27 @@
 #include "SNN_Main.h"
-#include <stdio.h>
 #include <stdbool.h>
 #include "tusb.h"
+#include "bsp/board.h"
 #include "pico/stdlib.h"
-#include "pico/stdio_usb.h"
 
 static serial_t serial;
 static symplecticModel_t sympModel;
 
-int main() 
+int main()
 {
-    stdio_init_all();
+    board_init();
+    tusb_init();
     Heartbeat_init();
+
     Serial_Init(&serial);
     Symplectic_Init(&sympModel, SymplecticModelNumLayers, StepSize);
     SymplecticInference_Init(&serial, &sympModel);
 
-    while (true) 
+    while (true)
     {
-        tud_task();
-        SerialTask(&serial);
+        tud_task();              
+        SerialTask(&serial);     
         SymplecticInference_Task();
         tight_loop_contents();
     }
-    return 0;
 }
-

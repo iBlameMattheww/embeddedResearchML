@@ -1,5 +1,8 @@
 #include "SymplecticInference.h"
+#include <tusb.h>
+#include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 static struct 
 {
@@ -7,58 +10,134 @@ static struct
     symplecticModel_t *model;
     inferenceState_t state;
     phaseState_t phase;
+    int32_t phaseBufferP[MAX_STEPS];
+    int32_t phaseBufferQ[MAX_STEPS];
     int32_t stepSize;
-    uint32_t remainingSteps;
+    uint32_t totalSteps;
+    uint32_t bufferedSteps;
+    uint32_t TX_Index;
+    bool runAccepted;
 } symplecticInferenceContext;
 
-void SymplecticInference_Task()
+void SymplecticInference_Task(void)
 {
-    if (symplecticInferenceContext.state == InferenceIdle 
-    && IsSerialCommandAvailable(symplecticInferenceContext.serial))
+    /* ---------------- IDLE: wait for RUN ---------------- */
+    if (symplecticInferenceContext.state == InferenceIdle &&
+        IsSerialCommandAvailable(symplecticInferenceContext.serial) &&
+        !symplecticInferenceContext.runAccepted)
     {
         runPayload_t payload;
         serialCmd_t cmd = GetSerialCommand(symplecticInferenceContext.serial);
 
         if (cmd == Cmd_Run)
         {
+            /* COPY PAYLOAD FIRST */
             SerialCopyPayload(
-                symplecticInferenceContext.serial, 
-                &payload);
+                symplecticInferenceContext.serial,
+                &payload
+            );
 
-            symplecticInferenceContext.phase.p = (int32_t)payload.p0 << 16;
-            symplecticInferenceContext.phase.q = (int32_t)payload.q0 << 16;
-            symplecticInferenceContext.stepSize = payload.stepSize;
-            symplecticInferenceContext.remainingSteps = payload.numSteps;
+            if (payload.numSteps > MAX_STEPS)
+            {
+                /* Invalid number of steps, ignore */
+                SerialSendDone();
+                symplecticInferenceContext.state = InferenceIdle;
+                symplecticInferenceContext.runAccepted = false;
+                return;
+            }
+
+            /* NOW clear command */
+            ClearSerialCommand(symplecticInferenceContext.serial);
+
+            /* Zero-step guard */
+            if (payload.numSteps == 0)
+            {
+                SerialSendDone();
+                return;
+            }
+
+
+            symplecticInferenceContext.bufferedSteps = 0;
+            symplecticInferenceContext.TX_Index = 0;
+            /* Latch state */
+            symplecticInferenceContext.runAccepted = true;
             symplecticInferenceContext.state = InferenceRunning;
+
+            symplecticInferenceContext.phase.p =
+                ((int32_t)payload.p0) << 16;
+            symplecticInferenceContext.phase.q =
+                ((int32_t)payload.q0) << 16;
+
+            symplecticInferenceContext.stepSize =
+                payload.stepSize;
+
+            symplecticInferenceContext.totalSteps =
+                payload.numSteps;
         }
     }
+
+    /* ---------------- RUNNING: step + stream ---------------- */
     if (symplecticInferenceContext.state == InferenceRunning)
     {
-        SympnetStep(
-            symplecticInferenceContext.model, 
-            &symplecticInferenceContext.phase, 
-            symplecticInferenceContext.stepSize);
-        
-        SerialSendPhasePacket(
-            symplecticInferenceContext.phase.p, 
-            symplecticInferenceContext.phase.q);
+        if (symplecticInferenceContext.bufferedSteps < symplecticInferenceContext.totalSteps)
+        {
+            SympnetStep(
+                symplecticInferenceContext.model,
+                &symplecticInferenceContext.phase,
+                symplecticInferenceContext.stepSize
+            );
 
-        if (--symplecticInferenceContext.remainingSteps == 0)
+            symplecticInferenceContext.phaseBufferP[symplecticInferenceContext.bufferedSteps] =
+                symplecticInferenceContext.phase.p;
+            symplecticInferenceContext.phaseBufferQ[symplecticInferenceContext.bufferedSteps] =
+                symplecticInferenceContext.phase.q;
+
+            symplecticInferenceContext.bufferedSteps++;
+        }
+        else
+        {
+            symplecticInferenceContext.state = InferenceTransmit;
+            symplecticInferenceContext.TX_Index = 0;
+        }
+    }
+
+    /* ---------------- TRANSMIT: send buffered data ---------------- */
+    if (symplecticInferenceContext.state == InferenceTransmit)
+    {
+        tud_task();
+        if (symplecticInferenceContext.TX_Index < symplecticInferenceContext.bufferedSteps)
+        {
+            if (SerialSendPhasePacket(
+                symplecticInferenceContext.phaseBufferP[symplecticInferenceContext.TX_Index],
+                symplecticInferenceContext.phaseBufferQ[symplecticInferenceContext.TX_Index]
+            ))
+            {
+                symplecticInferenceContext.TX_Index++;
+            }
+        }
+        
+        else
         {
             SerialSendDone();
+            tud_cdc_n_write_flush(CDC_ITF);
             symplecticInferenceContext.state = InferenceIdle;
+            symplecticInferenceContext.runAccepted = false;
+            symplecticInferenceContext.bufferedSteps = 0;
         }
     }
 }
 
+void SymplecticInference_Reset(void)
+{
+    symplecticInferenceContext.state = InferenceIdle;
+    symplecticInferenceContext.runAccepted = false;
+    symplecticInferenceContext.totalSteps = 0;
+}
 
 void SymplecticInference_Init(serial_t *serial, symplecticModel_t *model)
 {
+    memset(&symplecticInferenceContext, 0, sizeof(symplecticInferenceContext));
     symplecticInferenceContext.serial = serial;
     symplecticInferenceContext.model = model;
     symplecticInferenceContext.state = InferenceIdle;
-    symplecticInferenceContext.phase.p = 0;
-    symplecticInferenceContext.phase.q = 0;
-    symplecticInferenceContext.stepSize = 0;
-    symplecticInferenceContext.remainingSteps = 0;
 }

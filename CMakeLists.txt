@@ -16,6 +16,7 @@ add_executable(pico_main
     TinyML/Target/src/Serial.c
     TinyML/Target/src/SymplecticInference.c
     TinyML/Target/src/models/Sympnet.c
+    TinyML/Target/tools/USB_Descriptors.c
 )
 
 
@@ -27,9 +28,9 @@ target_include_directories(pico_main PRIVATE
     TinyML/Target/tools
 )
 
-target_link_libraries(pico_main pico_stdlib)
+target_link_libraries(pico_main pico_stdlib tinyusb_device tinyusb_board)
 
-pico_enable_stdio_usb(pico_main 1)
+pico_enable_stdio_usb(pico_main 0)
 pico_enable_stdio_uart(pico_main 0)
 
 pico_add_extra_outputs(pico_main)

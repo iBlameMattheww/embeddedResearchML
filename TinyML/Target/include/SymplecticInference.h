@@ -4,13 +4,14 @@
 #include "Serial.h"
 #include "Sympnet.h"
 
+#define MAX_STEPS 1024
 
 typedef struct 
 {
-    int8_t p0; 
-    int8_t q0; 
     int32_t stepSize;
     uint32_t numSteps;
+    int8_t p0; 
+    int8_t q0; 
 } runPayload_t;
 
 typedef struct 
@@ -23,6 +24,7 @@ typedef enum
 {
     InferenceIdle,
     InferenceRunning,
+    InferenceTransmit,
 } inferenceState_t;
 
 void SymplecticInference_Task();

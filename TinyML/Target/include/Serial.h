@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define CDC_ITF 0
 #define PENDING_PAYLOAD_SIZE 32
 #define RX_BUFFER_SIZE 64
 
@@ -29,7 +30,8 @@ typedef struct
 } serial_t;
 
 void SerialSendDone();
-void SerialSendPhasePacket(int32_t p, int32_t q);
+void ClearSerialCommand(serial_t *serial);
+bool SerialSendPhasePacket(int32_t p, int32_t q);
 void SerialCopyPayload(serial_t *serial, void *destination);
 serialCmd_t GetSerialCommand(serial_t *serial);
 bool IsSerialCommandAvailable(serial_t *serial);
