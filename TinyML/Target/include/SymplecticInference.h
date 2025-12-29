@@ -10,8 +10,8 @@ typedef struct
 {
     int32_t stepSize;
     uint32_t numSteps;
-    int8_t p0; 
-    int8_t q0; 
+    int32_t p0; 
+    int32_t q0; 
 } runPayload_t;
 
 typedef struct 

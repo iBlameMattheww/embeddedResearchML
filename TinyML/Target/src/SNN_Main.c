@@ -14,7 +14,7 @@ int main()
     Heartbeat_init();
 
     Serial_Init(&serial);
-    Symplectic_Init(&sympModel, SymplecticModelNumLayers, StepSize);
+    Symplectic_Init(&sympModel, SymplecticModelNumLayers);
     SymplecticInference_Init(&serial, &sympModel);
 
     while (true)

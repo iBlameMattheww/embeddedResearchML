@@ -39,6 +39,6 @@ int32_t SymplecticTimeScale(int32_t h, int32_t dH);
 void SympnetStateUpdate(phaseState_t *state, int32_t scale, const int8_t *weights);
 void SympnetLayerStep(phaseState_t *state, const symplecticLayer_t *layer, int32_t stepSize);
 void SympnetStep(symplecticModel_t *model, phaseState_t *state, int32_t stepSize);
-void Symplectic_Init(symplecticModel_t *model, uint8_t numLayers, int32_t stepSize);
+void Symplectic_Init(symplecticModel_t *model, uint8_t numLayers);
 
 #endif // SYMPNET_H

@@ -2,57 +2,50 @@ import serial
 import struct
 import time
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 # -------------------------------
 # SERIAL CONFIG
 # -------------------------------
-
-PORT = "/dev/tty.usbmodem1201"   # adjust if needed
+PORT = "/dev/tty.usbmodem1201"
 BAUD = 115200
 TIMEOUT = 1.0
 
-CDC_ITF = 0
-
 # -------------------------------
-# PROTOCOL CONSTANTS (MATCH FW)
+# PROTOCOL CONSTANTS
 # -------------------------------
+START_BYTE = 0xAA
+CMD_RUN    = 0x01
 
-START_BYTE   = 0xAA
-CMD_RUN      = 0x01
+PKT_START  = 0xA5
+PKT_PHASE  = 0x01
+PKT_DONE   = 0xFF
 
-PKT_START    = 0xA5
-PKT_PHASE    = 0x01
-PKT_DONE     = 0xFF
-
-PHASE_PACKET_SIZE = 10   # [A5][01][p:int32][q:int32]
-DONE_PACKET_SIZE  = 2    # [A5][FF]
+PHASE_PACKET_SIZE = 10  # [A5][01][p:int32][q:int32]
 
 # -------------------------------
 # TEST PARAMETERS
 # -------------------------------
-
 p0_float  = -1.0
 q0_float  =  0.5
-stepSize  = int(0.05 * 65536)         # Q16.16 (~0.05) = 3277
+stepSize  = 3276        # 0.05 in Q16.16
 numSteps  = 500
 
-# Quantize initial conditions (int8 → FW shifts to Q16)
-p0 = int(round(p0_float * 127))
-q0 = int(round(q0_float * 127))
+p0_q16 = int(p0_float * 65536)
+q0_q16 = int(q0_float * 65536)
+
 
 # -------------------------------
 # BUILD RUN PACKET
 # -------------------------------
-
 payload = struct.pack(
-    "<i I b b",
+    "<i I i i",
     stepSize,
     numSteps,
-    p0,
-    q0
+    p0_q16,
+    q0_q16
 )
-
 
 packet = struct.pack(
     "<BBB",
@@ -61,110 +54,100 @@ packet = struct.pack(
     len(payload)
 ) + payload
 
-print("Sending RUN command:")
-print(f"  p0={p0_float}, q0={q0_float}")
-print(f"  stepSize={stepSize}, numSteps={numSteps}")
+print("Sending RUN command")
+print(f"p0={p0_float}, q0={q0_float}, h={stepSize}, steps={numSteps}")
 
 # -------------------------------
 # OPEN SERIAL
 # -------------------------------
-
 ser = serial.Serial(PORT, BAUD, timeout=TIMEOUT)
 time.sleep(2)
 ser.reset_input_buffer()
-
 ser.write(packet)
 
 # -------------------------------
-# RECEIVE BUFFERED DATA
+# RECEIVE DATA
 # -------------------------------
-
 buffer = bytearray()
-p_vals = []
-q_vals = []
+records = []
 
-done_received = False
+done = False
+step = 0
 
-print("\nReceiving buffered trajectory...\n")
+print("Receiving data...")
 
-while not done_received:
+while not done:
     data = ser.read(256)
     if not data:
         continue
 
     buffer.extend(data)
 
-    while True:
-        if len(buffer) < 2:
-            break
-
-        # Search for packet start
+    while len(buffer) >= 2:
         if buffer[0] != PKT_START:
             buffer.pop(0)
             continue
 
         pkt_type = buffer[1]
 
-        # Phase packet
         if pkt_type == PKT_PHASE:
             if len(buffer) < PHASE_PACKET_SIZE:
-                break  # wait for more data
+                break
 
             _, _, p_raw, q_raw = struct.unpack(
                 "<BBii", buffer[:PHASE_PACKET_SIZE]
             )
-
             buffer = buffer[PHASE_PACKET_SIZE:]
 
-            p_vals.append(p_raw / 65536.0)
-            q_vals.append(q_raw / 65536.0)
+            records.append({
+                "step": step,
+                "p_raw": p_raw,
+                "q_raw": q_raw,
+                "p_q16": p_raw / 65536.0,
+                "q_q16": q_raw / 65536.0,
+                "p_float127": p_raw / 127.0,
+                "q_float127": q_raw / 127.0,
+            })
+
+            step += 1
             continue
 
-        # Done packet
         if pkt_type == PKT_DONE:
             buffer = buffer[2:]
-            done_received = True
+            done = True
             break
 
-        # Unknown packet → resync
         buffer.pop(0)
-
 
 ser.close()
 
 # -------------------------------
-# RESULTS
+# DATAFRAME + CSV
 # -------------------------------
+df = pd.DataFrame(records)
+df.to_csv("/Users/matthewobrien/Documents/sympnet_debug.csv", index=False)
 
-p_vals = np.array(p_vals)
-q_vals = np.array(q_vals)
-
-print(f"\nReceived {len(p_vals)} points")
-
-if len(p_vals) != numSteps:
-    print("⚠️ WARNING: Step count mismatch")
-else:
-    print("✅ Step count matches")
+print(f"Saved {len(df)} points to /Users/matthewobrien/Documents/sympnet_debug.csv")
 
 # -------------------------------
-# PLOTTING
+# PLOTS
 # -------------------------------
+plt.figure(figsize=(12,5))
 
-fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+plt.subplot(1,2,1)
+plt.plot(df["q_q16"], df["p_q16"])
+plt.xlabel("q")
+plt.ylabel("p")
+plt.title("Phase Space (Q16)")
+plt.axis("equal")
+plt.grid(True)
 
-axs[0].plot(q_vals, p_vals)
-axs[0].set_xlabel("q")
-axs[0].set_ylabel("p")
-axs[0].set_title("Phase Space")
-axs[0].grid(True)
-
-axs[1].plot(p_vals, label="p")
-axs[1].plot(q_vals, label="q")
-axs[1].set_xlabel("Step")
-axs[1].set_ylabel("Value")
-axs[1].set_title("Time Series")
-axs[1].legend()
-axs[1].grid(True)
+plt.subplot(1,2,2)
+plt.plot(df["p_q16"], label="p")
+plt.plot(df["q_q16"], label="q")
+plt.legend()
+plt.title("Time Series (Q16)")
+plt.grid(True)
 
 plt.tight_layout()
 plt.show()

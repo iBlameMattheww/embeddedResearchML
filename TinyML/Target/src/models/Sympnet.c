@@ -1,21 +1,26 @@
 #include "Sympnet.h"
 
-int32_t PolynomialDerivation(const int16_t* coefficients, uint8_t numberOfCoefficients, int32_t m)
+int32_t PolynomialDerivation(
+    const int32_t* a,   // coefficients in Q16.16
+    uint8_t n,
+    int32_t m           // Q16.16
+)
 {
-    int64_t accumulator = 0;
-    int32_t m_power = m;
+    int32_t y = 0;  // Q16.16
 
-    for (uint8_t k = 0; k < numberOfCoefficients; k++)
+    for (int k = n - 1; k >= 0; k--)
     {
-        uint8_t degree = 2 + k;
-        int32_t term = (int32_t)coefficients[k] * m_power;
+        // y = y * m
+        y = (int32_t)(((int64_t)y * m) >> 16);
 
-        term >>= COEFFICIENT_FRACTIONAL_BITS;
-        term *= degree;
-        accumulator += term;
-        m_power = (int32_t)(((int64_t)m_power * (int64_t)m) >> STATE_FRACTIONAL_BITS);
+        // y += (2 + k) * a[k]
+        y += (int32_t)((2 + k) * a[k]);
     }
-    return (int32_t)accumulator;
+
+    // multiply once more by m for m^(k+1)
+    y = (int32_t)(((int64_t)y * m) >> 16);
+
+    return y;
 }
 
 int32_t SymplecticTimeScale(int32_t h, int32_t dH)
@@ -47,7 +52,7 @@ void SympnetStep(symplecticModel_t *model, phaseState_t *state, int32_t stepSize
     }
 }
 
-void Symplectic_Init(symplecticModel_t *model, uint8_t numLayers, int32_t stepSize)
+void Symplectic_Init(symplecticModel_t *model, uint8_t numLayers)
 {
     static symplecticLayer_t layers[] = {
         {._private = {

@@ -63,16 +63,12 @@ void SymplecticInference_Task(void)
             symplecticInferenceContext.runAccepted = true;
             symplecticInferenceContext.state = InferenceRunning;
 
-            symplecticInferenceContext.phase.p =
-                ((int32_t)payload.p0) << 16;
-            symplecticInferenceContext.phase.q =
-                ((int32_t)payload.q0) << 16;
+            symplecticInferenceContext.phase.p = payload.p0;
+            symplecticInferenceContext.phase.q = payload.q0;
 
-            symplecticInferenceContext.stepSize =
-                payload.stepSize;
+            symplecticInferenceContext.stepSize = payload.stepSize;
 
-            symplecticInferenceContext.totalSteps =
-                payload.numSteps;
+            symplecticInferenceContext.totalSteps = payload.numSteps;
         }
     }
 
