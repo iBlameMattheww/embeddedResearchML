@@ -37,14 +37,21 @@ static inline int32_t Exp_Approx(int32_t x_q16)
     return y0 + interp;
 }
 
-static inline int32_t Dot_I8_I32_TO_I32(const int8_t* vectorA, const int32_t* vectorB, uint8_t length, uint8_t fractionBits)
+static inline int32_t Dot_Q16_Q16_TO_Q16(
+    const int32_t *w,   // Q16.16
+    const int32_t *x,   // Q16.16
+    uint8_t length
+)
 {
-    int64_t result_q16 = 0;
+    int64_t acc = 0;
+
     for (uint8_t i = 0; i < length; i++)
     {
-        result_q16 += (int64_t)vectorA[i] * vectorB[i];
+        acc += (int64_t)w[i] * (int64_t)x[i];
     }
-    return (int32_t)(result_q16 >> fractionBits);
+
+    // Q16.16 * Q16.16 → Q32.32 → back to Q16.16
+    return (int32_t)(acc >> 16);
 }
 
 #endif

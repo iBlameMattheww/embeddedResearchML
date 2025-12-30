@@ -1,46 +1,65 @@
 #include "Sympnet.h"
 
 int32_t PolynomialDerivation(
-    const int32_t* a,   // coefficients in Q16.16
+    const int32_t* a,   // Q16.16 coefficients
     uint8_t n,
     int32_t m           // Q16.16
 )
 {
-    int32_t y = 0;  // Q16.16
+    int64_t acc = 0;          // Q32.32 accumulator
+    int64_t m_power = m;      // m^1 in Q16.16
 
-    for (int k = n - 1; k >= 0; k--)
+    for (uint8_t k = 0; k < n; k++)
     {
-        // y = y * m
-        y = (int32_t)(((int64_t)y * m) >> 16);
+        // term = (2+k) * a[k] * m^(k+1)
+        int64_t term = (int64_t)(2 + k) * a[k]; // Q16.16
+        term = (term * m_power) >> 16;          // back to Q16.16
 
-        // y += (2 + k) * a[k]
-        y += (int32_t)((2 + k) * a[k]);
+        acc += term;
+
+        // m_power *= m  → m^(k+2)
+        m_power = (m_power * m) >> 16;
     }
 
-    // multiply once more by m for m^(k+1)
-    y = (int32_t)(((int64_t)y * m) >> 16);
-
-    return y;
+    return (int32_t)acc;  // Q16.16
 }
+
 
 int32_t SymplecticTimeScale(int32_t h, int32_t dH)
 {
-    int64_t product = (int64_t)h * (int64_t)dH;
-    return (int32_t)(product >> STATE_FRACTIONAL_BITS);
+    // h: Q16.16, dH: Q16.16 → product: Q32.32
+    return (int32_t)(((int64_t)h * dH) >> 16);
 }
 
-void SympnetStateUpdate(phaseState_t *state, int32_t scale, const int8_t *weights)
+void SympnetStateUpdate(
+    phaseState_t *state,
+    int32_t scale,           // Q16.16 = h * dH
+    const int32_t *weights   // Q16.16
+)
 {
-    state->p += (int32_t)(((int64_t)scale * (int64_t)weights[1]) >> WEIGHT_FRACTIONAL_BITS);
-    state->q -= (int32_t)(((int64_t)scale * (int64_t)weights[0]) >> WEIGHT_FRACTIONAL_BITS);
+    state->p += (int32_t)(((int64_t)scale * weights[1]) >> 16);
+    state->q -= (int32_t)(((int64_t)scale * weights[0]) >> 16);
 }
 
-void SympnetLayerStep(phaseState_t *state, const symplecticLayer_t *layer, int32_t stepSize)
+
+void SympnetLayerStep(phaseState_t *state,
+                      const symplecticLayer_t *layer,
+                      int32_t stepSize)
 {
-    int32_t x[2] = {state->p, state->q};
-    int32_t m = Dot_I8_I32_TO_I32(layer->_private.weights, x, 2, WEIGHT_FRACTIONAL_BITS);
-    int32_t dH = PolynomialDerivation(layer->_private.coefficients, layer->_private.numCoefficients, m);
-    int32_t scale = SymplecticTimeScale(stepSize, dH);
+    int32_t x[2] = { state->p, state->q };  // Q16.16
+
+    int32_t m = Dot_Q16_Q16_TO_Q16(
+        layer->_private.weights, x, 2
+    );  // Q16.16
+
+    int32_t dH = PolynomialDerivation(
+        layer->_private.coefficients,
+        layer->_private.numCoefficients,
+        m
+    );  // Q16.16
+
+    int32_t scale = SymplecticTimeScale(stepSize, dH); // Q16.16
+
     SympnetStateUpdate(state, scale, layer->_private.weights);
 }
 
