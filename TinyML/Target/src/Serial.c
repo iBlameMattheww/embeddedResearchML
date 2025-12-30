@@ -14,6 +14,7 @@ enum
     // TX streaming protocol (Pico → PC)
     PacketStart = 0xA5,
     PacketPhase = 0x01,
+    PacketPayloadLength = 0x08,
     PacketDone  = 0xFF,
 
     PhaseCoordinateSize = 4,
@@ -44,18 +45,14 @@ bool SerialSendPhasePacket(serial_t *serial, int32_t p, int32_t q)
 {
     uint8_t packet[13];
 
-    packet[0] = 0xA5;
-    packet[1] = 0x01;
-    packet[2] = 0x0C;
+    packet[0] = PacketStart;
+    packet[1] = PacketPhase;
+    packet[2] = PacketPayloadLength;
     packet[3] = serial->_private.sequenceNumber++;
     memcpy(&packet[4], &p, 4);
     memcpy(&packet[8], &q, 4);
     packet[12] = CRC_8(&packet[1], 11);
 
-    if (tud_cdc_n_write_available(CDC_ITF) < sizeof(packet))
-    {
-        return false;
-    }
     tud_cdc_n_write(CDC_ITF, packet, sizeof(packet));
     return true;
 }
