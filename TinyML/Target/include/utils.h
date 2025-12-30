@@ -10,6 +10,28 @@
 #define MIN(a, b)          ((a) < (b) ? (a) : (b))
 #define LENGTH(arr)      (sizeof(arr) / sizeof(arr[0]))
 
+static inline uint8_t CRC_8(const uint8_t *data, uint8_t len)
+{
+    uint8_t crc = 0xFF;
+
+    for (uint8_t i = 0; i < len; i++)
+    {
+        crc ^= data[i];
+        for (uint8_t j = 0; j < 8; j++)
+        {
+            if (crc & 0x80)
+            {
+                crc = (crc << 1) ^ 0x31;
+            }
+            else
+            {
+                crc <<= 1;
+            }
+        }
+    }
+    return crc;
+}
+
 static inline int32_t Exp_Approx(int32_t x_q16)
 {
     if (x_q16 <= EXP_MIN_Q16)
@@ -50,8 +72,9 @@ static inline int32_t Dot_Q16_Q16_TO_Q16(
         acc += (int64_t)w[i] * (int64_t)x[i];
     }
 
-    // Q16.16 * Q16.16 → Q32.32 → back to Q16.16
-    return (int32_t)(acc >> 16);
+    acc >>= 16;
+    CLAMP(acc, INT32_MIN, INT32_MAX);
+    return (int32_t)acc;
 }
 
 #endif

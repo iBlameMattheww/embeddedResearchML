@@ -1,6 +1,7 @@
 #include "Serial.h"
 #include "tusb.h"
 #include "pico/stdlib.h"
+#include "utils.h"
 
 enum
 {
@@ -20,10 +21,16 @@ enum
 };
 
 
-void SerialSendDone(void)
+void SerialSendDone(serial_t *serial)
 {
-    uint8_t pkt[2] = { PacketStart, PacketDone };
-    tud_cdc_n_write(CDC_ITF, pkt, sizeof(pkt));
+    uint8_t donePacket[5];
+    donePacket[0] = PacketStart;
+    donePacket[1] = PacketDone;
+    donePacket[2] = 1;
+    donePacket[3] = serial->_private.sequenceNumber++;
+    donePacket[4] = CRC_8(&donePacket[1], 3);
+
+    tud_cdc_n_write(CDC_ITF, donePacket, sizeof(donePacket));
 }
 
 
@@ -33,22 +40,24 @@ void ClearSerialCommand(serial_t *serial)
     serial->_private.pendingPayloadLength = 0;
 }
 
-bool SerialSendPhasePacket(int32_t p, int32_t q)
+bool SerialSendPhasePacket(serial_t *serial, int32_t p, int32_t q)
 {
-    uint8_t packet[10];
+    uint8_t packet[13];
 
     packet[0] = 0xA5;
     packet[1] = 0x01;
-    memcpy(&packet[2], &p, 4);
-    memcpy(&packet[6], &q, 4);
+    packet[2] = 0x0C;
+    packet[3] = serial->_private.sequenceNumber++;
+    memcpy(&packet[4], &p, 4);
+    memcpy(&packet[8], &q, 4);
+    packet[12] = CRC_8(&packet[1], 11);
 
-    uint32_t written = tud_cdc_n_write(CDC_ITF, packet, 10);
-    if (written == 10)
+    if (tud_cdc_n_write_available(CDC_ITF) < sizeof(packet))
     {
-        return true;
+        return false;
     }
-    tud_cdc_n_write_flush(CDC_ITF);
-    return false;
+    tud_cdc_n_write(CDC_ITF, packet, sizeof(packet));
+    return true;
 }
 
 void SerialCopyPayload(serial_t *serial, void *destination)
@@ -69,22 +78,6 @@ bool IsSerialCommandAvailable(serial_t *serial)
 {
     return serial->_private.command != Cmd_None;
 }
-
-
-// void SerialTask(serial_t *serial)
-// {
-//     (void)serial;
-
-//     while (tud_cdc_n_available(0))
-//     {
-//         uint8_t byte = tud_cdc_n_read_char(0);
-//         tud_cdc_n_write(0, &byte, 1);
-//     }
-
-//     // Flush once per loop, NOT per byte
-//     tud_cdc_n_write_flush(0);
-// }
-
 
 void SerialTask(serial_t *serial)
 {

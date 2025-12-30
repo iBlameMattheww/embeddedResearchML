@@ -30,7 +30,7 @@ target_include_directories(pico_main PRIVATE
 
 target_link_libraries(pico_main pico_stdlib tinyusb_device tinyusb_board)
 
-pico_enable_stdio_usb(pico_main 0)
+pico_enable_stdio_usb(pico_main 1)
 pico_enable_stdio_uart(pico_main 0)
 
 pico_add_extra_outputs(pico_main)

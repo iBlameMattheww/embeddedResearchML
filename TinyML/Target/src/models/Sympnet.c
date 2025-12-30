@@ -1,4 +1,5 @@
 #include "Sympnet.h"
+#include "Utils.h"
 
 int32_t PolynomialDerivation(
     const int32_t* a,   // Q16.16 coefficients
@@ -16,14 +17,15 @@ int32_t PolynomialDerivation(
         term = (term * m_power) >> 16;          // back to Q16.16
 
         acc += term;
+        CLAMP(acc, INT32_MIN, INT32_MAX);
 
         // m_power *= m  → m^(k+2)
         m_power = (m_power * m) >> 16;
+        CLAMP(m_power, INT32_MIN, INT32_MAX);
     }
 
     return (int32_t)acc;  // Q16.16
 }
-
 
 int32_t SymplecticTimeScale(int32_t h, int32_t dH)
 {
@@ -38,7 +40,9 @@ void SympnetStateUpdate(
 )
 {
     state->p += (int32_t)(((int64_t)scale * weights[1]) >> 16);
+    CLAMP(state->p, INT32_MIN, INT32_MAX);
     state->q -= (int32_t)(((int64_t)scale * weights[0]) >> 16);
+    CLAMP(state->q, INT32_MIN, INT32_MAX);
 }
 
 

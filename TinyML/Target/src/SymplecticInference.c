@@ -40,7 +40,7 @@ void SymplecticInference_Task(void)
             if (payload.numSteps > MAX_STEPS)
             {
                 /* Invalid number of steps, ignore */
-                SerialSendDone();
+                SerialSendDone(symplecticInferenceContext.serial);
                 symplecticInferenceContext.state = InferenceIdle;
                 symplecticInferenceContext.runAccepted = false;
                 return;
@@ -52,7 +52,7 @@ void SymplecticInference_Task(void)
             /* Zero-step guard */
             if (payload.numSteps == 0)
             {
-                SerialSendDone();
+                SerialSendDone(symplecticInferenceContext.serial);
                 return;
             }
 
@@ -104,6 +104,7 @@ void SymplecticInference_Task(void)
         if (symplecticInferenceContext.TX_Index < symplecticInferenceContext.bufferedSteps)
         {
             if (SerialSendPhasePacket(
+                symplecticInferenceContext.serial,
                 symplecticInferenceContext.phaseBufferP[symplecticInferenceContext.TX_Index],
                 symplecticInferenceContext.phaseBufferQ[symplecticInferenceContext.TX_Index]
             ))
@@ -114,7 +115,7 @@ void SymplecticInference_Task(void)
         
         else
         {
-            SerialSendDone();
+            SerialSendDone(symplecticInferenceContext.serial);
             tud_cdc_n_write_flush(CDC_ITF);
             symplecticInferenceContext.state = InferenceIdle;
             symplecticInferenceContext.runAccepted = false;
