@@ -28,7 +28,6 @@ Utils_test.cpp content
 */
 void Test_TypicalSympnetDotProduct(void);
 void Test_AllZerosDotProduct(void);
-void Test_MaxMagnitudeDotProduct(void);
 
 /* 
 Symplectic_tests.cpp content    
@@ -38,7 +37,7 @@ void Test_ZeroMPolynomialDerivation(void);
 void Test_NegativeMPolynomialDerivation(void);
 void Test_TypicalSymplecticTimeScale(void);
 void Test_ZeroDerivativeSymplecticTimeScale(void);
-void Test_SignHandlingSyplecticTimeScale(void);
+void Test_SignHandlingSymplecticTimeScale(void);
 void Test_TypicalStateUpdate(void);
 void Test_ZeroScaleStateUpdate(void);
 void Test_SignBehaviorStateUpdate(void);
@@ -63,7 +62,6 @@ int main(void)
     // Utils tests
     RUN_TEST(Test_TypicalSympnetDotProduct);
     RUN_TEST(Test_AllZerosDotProduct);
-    RUN_TEST(Test_MaxMagnitudeDotProduct);
 
     // Symplectic tests
     RUN_TEST(Test_SingleCoefficientPolynomialDerivation);
@@ -71,12 +69,11 @@ int main(void)
     RUN_TEST(Test_NegativeMPolynomialDerivation);
     RUN_TEST(Test_TypicalSymplecticTimeScale);
     RUN_TEST(Test_ZeroDerivativeSymplecticTimeScale);
-    RUN_TEST(Test_SignHandlingSyplecticTimeScale);
+    RUN_TEST(Test_SignHandlingSymplecticTimeScale);
     RUN_TEST(Test_TypicalStateUpdate);
     RUN_TEST(Test_ZeroScaleStateUpdate);
     RUN_TEST(Test_SignBehaviorStateUpdate);
     RUN_TEST(Test_SingleLayerSympnetStep);
-    // RUN_TEST(Test_MultiLayerSympnetStep);
 
     return UNITY_END();
 }
