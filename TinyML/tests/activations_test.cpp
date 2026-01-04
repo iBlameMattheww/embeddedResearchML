@@ -1,17 +1,7 @@
 #include "unity.h"
-#include "activations.h"
-#include "utils.h"
+#include "Activations.h"
+#include "Utils.h"
 #include <cmath>
-
-void setUp(void) 
-{
-    // Optional: code to run before each test
-}
-
-void tearDown(void) 
-{
-    // Optional: code to run after each test
-}
 
 void Test_Relu_Positive(void) 
 {
@@ -34,7 +24,7 @@ void Test_Exp_Approx_0(void)
     int32_t actual_q16 = Exp_Approx(0 * 65536); // Q16 fixed-point result
     double actual = actual_q16 / 65536.0;
     double rel_error = std::abs(actual - expected) / expected;
-    TEST_ASSERT_TRUE(rel_error < 0.02); // 2% tolerance
+    TEST_ASSERT_TRUE(rel_error < 0.0001); // 0.1% tolerance
 }
 
 void Test_Exp_Approx_Full_Range(void)
@@ -46,12 +36,21 @@ void Test_Exp_Approx_Full_Range(void)
     for (int32_t x_q16 = min_q16; x_q16 <= max_q16; x_q16 += step) {
         float x = x_q16 / 65536.0f;
         float expected = std::exp(x);
-        int32_t actual_q16 = Exp_Approx(x_q16);
-        float actual = actual_q16 / 65536.0f;
-        float rel_error = fabsf(actual - expected) / expected;
-        if (rel_error >= 0.035) {
-            printf("FAIL: x=%f (q16=%d), expected=%f, actual=%f, rel_error=%f\n", x, x_q16, expected, actual, rel_error);
-            UNITY_TEST_FAIL(__LINE__, "Exp_Approx relative error too high");
+        float actual = Exp_Approx(x_q16) / 65536.0f;
+
+        float abs_err = fabsf(actual - expected);
+        float rel_err = fabsf(actual - expected) / expected;
+
+        // absolute error OK for tiny exp(-x)
+        bool ok_abs = abs_err < 1e-4f;
+
+        // relative error OK for normal values
+        bool ok_rel = rel_err < 0.008f;
+
+        if (!(ok_abs || ok_rel)) {
+            printf("FAIL: x=%f expected=%f actual=%f abs_err=%f rel_err=%f\n",
+                   x, expected, actual, abs_err, rel_err);
+            UNITY_TEST_FAIL(__LINE__, "Exp_Approx error too high");
         }
     }
 }
@@ -98,19 +97,4 @@ void test_Softmax_LargeValues_NoOverflow(void)
 
     uint16_t sum = logits[0] + logits[1] + logits[2];
     TEST_ASSERT_INT_WITHIN(2, 255, sum);
-}
-
-int main(void) 
-{
-    UNITY_BEGIN();
-    RUN_TEST(Test_Relu_Positive);
-    RUN_TEST(Test_Relu_Zero);
-    RUN_TEST(Test_Relu_Negative);
-    RUN_TEST(Test_Exp_Approx_0);
-    RUN_TEST(Test_Exp_Approx_Full_Range);
-    RUN_TEST(Test_Softmax_SineDataset_SingleLogit_Returns255);
-    RUN_TEST(test_Softmax_LorenzDataset_3Values_NormalizedAndScaled);
-    RUN_TEST(test_Softmax_NegativeValues_StableNormalization);
-    RUN_TEST(test_Softmax_LargeValues_NoOverflow);
-    return UNITY_END();
 }

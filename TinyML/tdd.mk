@@ -4,17 +4,29 @@ AR       := ar
 CFLAGS   := -std=c++17 -Wall -Wextra -O0 -g
 
 # ---------- Include Paths ----------
-INCLUDES := -Iunity/src -ITarget/src -ITarget/include -ITarget/tools
+INCLUDES := \
+    -Iunity/src \
+    -ITarget/src \
+    -ITarget/include \
+    -ITarget/include/exported_weights \
+    -ITarget/src/models \
+    -ITarget/tools
 
 # ---------- Directories ----------
 UNITY_DIR  := unity/src
 SRC_DIR    := Target/src
+MODEL_DIR  := Target/src/models
 TEST_DIR   := tests
 BUILD_DIR  := build
 
 # ---------- Sources ----------
 UNITY_SRC  := $(wildcard $(UNITY_DIR)/*.c)
-SRC_FILES  := $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*.cpp)
+
+# Explicitly exclude main.c (Unity has its own main)
+SRC_FILES  := \
+    $(SRC_DIR)/Activations.c \
+    $(MODEL_DIR)/Sympnet.c \
+
 TEST_FILES := $(wildcard $(TEST_DIR)/*.cpp)
 
 # ---------- Outputs ----------
@@ -29,7 +41,7 @@ all: $(OUT)
 # --- Build Unity as a static library ---
 $(UNITY_LIB): $(UNITY_SRC)
 	@mkdir -p $(BUILD_DIR)
-	$(CC) -c $(UNITY_SRC) $(INCLUDES) -o $(BUILD_DIR)/unity.o
+	gcc -c $(UNITY_SRC) $(INCLUDES) -o $(BUILD_DIR)/unity.o
 	$(AR) rcs $@ $(BUILD_DIR)/unity.o
 
 # --- Build and link test executable ---
