@@ -19,7 +19,7 @@ PKT_PHASE  = 0x01
 PKT_DONE   = 0xFF
 
 PKT_ACK   = 0x06
-PKT_NACK  = 0x15
+# PKT_NACK  = 0x15
 
 PHASE_PACKET_SIZE = 13
 DONE_PACKET_SIZE  = 5
@@ -47,16 +47,8 @@ def CheckSequence(expected, actual):
     return True
 
 def SendAck(ser):
-    while True:
-        ser.write(bytes([PKT_ACK]))
-        if ser.in_waiting > 0:
-            break
-
-def SendNack(ser):
-    while True:
-        ser.write(bytes([PKT_NACK]))
-        if ser.in_waiting > 0:
-            break
+    ser.write(bytes([PKT_ACK]))
+    ser.flush()
 
 # -------------------------------
 # SEND RUN COMMAND
@@ -114,16 +106,10 @@ while not done:
 
             if crc8(pkt[1:12]) != pkt[12]:
                 print("PHASE CRC error")
-                SendNack(ser)
                 continue
 
             if not CheckSequence( expectedSequence, pkt[3]):
                 print(f"PHASE sequence error. Expected {expectedSequence}, got {pkt[3]}")
-                if expectedSequence - pkt[3] == 1:
-                    print("Duplicate packet, sending ACK")
-                    SendAck(ser)
-                else:
-                    SendNack(ser)
                 continue
 
             print(f"PHASE seq {pkt[3]} received")
@@ -155,12 +141,10 @@ while not done:
 
             if crc8(pkt[1:4]) != pkt[4]:
                 print("DONE CRC error")
-                SendNack(ser)
                 continue
 
             if not CheckSequence(expectedSequence, pkt[3]):
                 print(f"DONE sequence error. Expected {expectedSequence}, got {pkt[3]}")
-                SendNack(ser)
                 continue
 
             SendAck(ser)

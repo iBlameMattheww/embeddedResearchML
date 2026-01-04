@@ -11,7 +11,6 @@ enum
     PayloadLengthByte = 2,
     PayloadBeginByte = 3,
     AckByte = 0x06,
-    NackByte = 0x15,
 
     // TX streaming protocol (Pico → PC)
     PacketStart = 0xA5,
@@ -88,11 +87,7 @@ void SerialTask(serial_t *serial)
             if (byte == AckByte)
             {
                 serial->_private.acknowledged = true;
-                continue;
-            }
-            else if (byte == NackByte)
-            {
-                serial->_private.acknowledged = false;
+                serial->_private.rx_Length = 0;
                 continue;
             }
 
