@@ -18,6 +18,9 @@ PKT_START  = 0xA5
 PKT_PHASE  = 0x01
 PKT_DONE   = 0xFF
 
+PKT_ACK   = 0x06
+PKT_NACK  = 0x15
+
 PHASE_PACKET_SIZE = 13
 DONE_PACKET_SIZE  = 5
 
@@ -34,6 +37,26 @@ def crc8(data: bytes) -> int:
             else:
                 crc = (crc << 1) & 0xFF
     return crc
+
+# -------------------------------
+# SEQUENCE CHECK
+# -------------------------------
+def CheckSequence(expected, actual):
+    if expected != actual:
+        return False
+    return True
+
+def SendAck(ser):
+    while True:
+        ser.write(bytes([PKT_ACK]))
+        if ser.in_waiting > 0:
+            break
+
+def SendNack(ser):
+    while True:
+        ser.write(bytes([PKT_NACK]))
+        if ser.in_waiting > 0:
+            break
 
 # -------------------------------
 # SEND RUN COMMAND
@@ -63,6 +86,7 @@ print("RUN sent")
 buffer = bytearray()
 records = []
 done = False
+expectedSequence = 0
 
 while not done:
     buffer.extend(ser.read(256))
@@ -90,7 +114,23 @@ while not done:
 
             if crc8(pkt[1:12]) != pkt[12]:
                 print("PHASE CRC error")
+                SendNack(ser)
                 continue
+
+            if not CheckSequence( expectedSequence, pkt[3]):
+                print(f"PHASE sequence error. Expected {expectedSequence}, got {pkt[3]}")
+                if expectedSequence - pkt[3] == 1:
+                    print("Duplicate packet, sending ACK")
+                    SendAck(ser)
+                else:
+                    SendNack(ser)
+                continue
+
+            print(f"PHASE seq {pkt[3]} received")
+            SendAck(ser)
+            expectedSequence += 1
+            if expectedSequence > 255:
+                expectedSequence = 0
 
             seq = pkt[3]
             p_raw = struct.unpack("<i", pkt[4:8])[0]
@@ -115,7 +155,15 @@ while not done:
 
             if crc8(pkt[1:4]) != pkt[4]:
                 print("DONE CRC error")
+                SendNack(ser)
                 continue
+
+            if not CheckSequence(expectedSequence, pkt[3]):
+                print(f"DONE sequence error. Expected {expectedSequence}, got {pkt[3]}")
+                SendNack(ser)
+                continue
+
+            SendAck(ser)
 
             print("DONE received")
             done = True
