@@ -18,6 +18,9 @@ PKT_START  = 0xA5
 PKT_PHASE  = 0x01
 PKT_DONE   = 0xFF
 
+PKT_ACK   = 0x06
+# PKT_NACK  = 0x15
+
 PHASE_PACKET_SIZE = 13
 DONE_PACKET_SIZE  = 5
 
@@ -34,6 +37,18 @@ def crc8(data: bytes) -> int:
             else:
                 crc = (crc << 1) & 0xFF
     return crc
+
+# -------------------------------
+# SEQUENCE CHECK
+# -------------------------------
+def CheckSequence(expected, actual):
+    if expected != actual:
+        return False
+    return True
+
+def SendAck(ser):
+    ser.write(bytes([PKT_ACK]))
+    ser.flush()
 
 # -------------------------------
 # SEND RUN COMMAND
@@ -63,6 +78,7 @@ print("RUN sent")
 buffer = bytearray()
 records = []
 done = False
+expectedSequence = 0
 
 while not done:
     buffer.extend(ser.read(256))
@@ -92,6 +108,16 @@ while not done:
                 print("PHASE CRC error")
                 continue
 
+            if not CheckSequence( expectedSequence, pkt[3]):
+                print(f"PHASE sequence error. Expected {expectedSequence}, got {pkt[3]}")
+                continue
+
+            print(f"PHASE seq {pkt[3]} received")
+            SendAck(ser)
+            expectedSequence += 1
+            if expectedSequence > 255:
+                expectedSequence = 0
+
             seq = pkt[3]
             p_raw = struct.unpack("<i", pkt[4:8])[0]
             q_raw = struct.unpack("<i", pkt[8:12])[0]
@@ -116,6 +142,12 @@ while not done:
             if crc8(pkt[1:4]) != pkt[4]:
                 print("DONE CRC error")
                 continue
+
+            if not CheckSequence(expectedSequence, pkt[3]):
+                print(f"DONE sequence error. Expected {expectedSequence}, got {pkt[3]}")
+                continue
+
+            SendAck(ser)
 
             print("DONE received")
             done = True

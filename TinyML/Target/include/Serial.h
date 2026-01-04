@@ -27,12 +27,13 @@ typedef struct
         uint8_t pendingPayload[PENDING_PAYLOAD_SIZE];
         uint8_t pendingPayloadLength;
         uint8_t sequenceNumber;
+        bool acknowledged;
     } _private; 
 } serial_t;
 
 void SerialSendDone(serial_t *serial);
 void ClearSerialCommand(serial_t *serial);
-bool SerialSendPhasePacket(serial_t *serial, int32_t p, int32_t q);
+void SerialSendPhasePacket(serial_t *serial, int32_t p, int32_t q);
 void SerialCopyPayload(serial_t *serial, void *destination);
 serialCmd_t GetSerialCommand(serial_t *serial);
 bool IsSerialCommandAvailable(serial_t *serial);

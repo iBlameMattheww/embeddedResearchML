@@ -57,6 +57,8 @@ void SymplecticInference_Task(void)
             }
 
 
+            symplecticInferenceContext.serial->_private.sequenceNumber = 0;
+            symplecticInferenceContext.serial->_private.acknowledged = false;
             symplecticInferenceContext.bufferedSteps = 0;
             symplecticInferenceContext.TX_Index = 0;
             /* Latch state */
@@ -103,14 +105,18 @@ void SymplecticInference_Task(void)
         tud_task();
         if (symplecticInferenceContext.TX_Index < symplecticInferenceContext.bufferedSteps)
         {
-            if (SerialSendPhasePacket(
+            SerialSendPhasePacket(
                 symplecticInferenceContext.serial,
                 symplecticInferenceContext.phaseBufferP[symplecticInferenceContext.TX_Index],
                 symplecticInferenceContext.phaseBufferQ[symplecticInferenceContext.TX_Index]
-            ))
+            );
+
+            if (symplecticInferenceContext.serial->_private.acknowledged == true)
             {
                 symplecticInferenceContext.TX_Index++;
-            }
+                symplecticInferenceContext.serial->_private.sequenceNumber++;
+                symplecticInferenceContext.serial->_private.acknowledged = false;           
+            }  
         }
         
         else
