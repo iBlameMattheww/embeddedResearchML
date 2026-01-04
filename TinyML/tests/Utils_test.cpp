@@ -1,5 +1,5 @@
 #include "unity.h"
-#include "utils.h"
+#include "Utils.h"
 #include <cmath>
 
 void Test_TypicalSympnetDotProduct(void)

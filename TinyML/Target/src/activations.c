@@ -40,9 +40,8 @@ void Softmax(int16_t *x, uint8_t length)
 
     for (uint8_t i = 0; i < length; i++)
     {
-        // all 32-bit, safe for your ranges
         int32_t num = exp_vals[i] * 255;
-        num += exp_sum / 2;           // rounding
+        num += exp_sum / 2;
         x[i]   = (uint16_t)(num / exp_sum);
     }
 }

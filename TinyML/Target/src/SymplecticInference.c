@@ -56,12 +56,12 @@ void SymplecticInference_Task(void)
                 return;
             }
 
-
+            /* Latch state */
             symplecticInferenceContext.serial->_private.sequenceNumber = 0;
             symplecticInferenceContext.serial->_private.acknowledged = false;
             symplecticInferenceContext.bufferedSteps = 0;
             symplecticInferenceContext.TX_Index = 0;
-            /* Latch state */
+            
             symplecticInferenceContext.runAccepted = true;
             symplecticInferenceContext.state = InferenceRunning;
 
