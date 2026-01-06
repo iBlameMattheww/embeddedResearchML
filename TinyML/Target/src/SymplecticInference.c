@@ -122,10 +122,16 @@ void SymplecticInference_Task(void)
         else
         {
             SerialSendDone(symplecticInferenceContext.serial);
-            tud_cdc_n_write_flush(CDC_ITF);
-            symplecticInferenceContext.state = InferenceIdle;
-            symplecticInferenceContext.runAccepted = false;
-            symplecticInferenceContext.bufferedSteps = 0;
+            
+            if (symplecticInferenceContext.serial->_private.acknowledged == true)
+            {
+                /* DONE acknowledged, finish */
+                tud_cdc_n_write_flush(CDC_ITF);
+                symplecticInferenceContext.state = InferenceIdle;
+                symplecticInferenceContext.runAccepted = false;
+                symplecticInferenceContext.bufferedSteps = 0;
+                symplecticInferenceContext.serial->_private.acknowledged = false;
+            } 
         }
     }
 }
