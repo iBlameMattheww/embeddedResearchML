@@ -18,6 +18,7 @@ PKT_START  = 0xA5
 PKT_PHASE  = 0x01
 PKT_DONE   = 0xFF
 PKT_ACK   = 0x06
+PKT_RESET = 0x15
 PHASE_PACKET_SIZE = 13
 DONE_PACKET_SIZE  = 5
 
@@ -66,7 +67,13 @@ def CollectFirstFiftyInitialValuesFromDataset(data):
         initialConditions.append((q0, p0))
     return initialConditions
 
+def SendReset(ser):
+    ser.write(bytes([PKT_RESET]))
+    ser.flush()
+    time.sleep(0.5) 
+
 def RunInferenceTrajectory(index, ser, records, q0, p0, stepSize, numSteps):
+    SendReset(ser)
     p0_q16_16 = QuantizeToQ16_16(p0)
     q0_q16_16 = QuantizeToQ16_16(q0)
 
@@ -130,22 +137,24 @@ def RunInferenceTrajectory(index, ser, records, q0, p0, stepSize, numSteps):
                 continue
 
             if pkt_Type == PKT_DONE:
-                print(f"Receiving DONE packet for trajectory {index}")
                 if len(buffer) < DONE_PACKET_SIZE:
                     break
 
                 pkt = buffer[:DONE_PACKET_SIZE]
                 buffer = buffer[DONE_PACKET_SIZE:]
 
-                # if CRC8(pkt[1:4]) != pkt[4]:
-                #     continue
+                if CRC8(pkt[1:4]) != pkt[4]:
+                    continue
 
-                # if not CheckSequence(expectedSequence, pkt[3]):
-                #     continue
+                if not CheckSequence(expectedSequence, pkt[3]):
+                    continue
 
                 print(f"DONE packet received for trajectory {index}")
                 SendAck(ser)
                 done = True
+                ser.reset_input_buffer()
+                ser.reset_output_buffer()
+                time.sleep(0.1)
                 break
 
             buffer.pop(0)

@@ -11,6 +11,7 @@ enum
     PayloadLengthByte = 2,
     PayloadBeginByte = 3,
     AckByte = 0x06,
+    ResetByte = 0x15,
 
     // TX streaming protocol (Pico → PC)
     PacketStart = 0xA5,
@@ -22,6 +23,18 @@ enum
     PhasePacketSize = 10, 
 };
 
+void SerialReset(serial_t *serial)
+{
+    serial->_private.command = Cmd_None;
+    serial->_private.rx_Length = 0;
+    serial->_private.pendingPayloadLength = 0;
+    serial->_private.sequenceNumber = 0;
+    serial->_private.acknowledged = false;
+    serial->_private.resetRequested = false;
+
+    tud_cdc_n_write_clear(CDC_ITF);
+    tud_cdc_n_read_flush(CDC_ITF);
+}
 
 void SerialSendDone(serial_t *serial)
 {
@@ -94,6 +107,12 @@ void SerialTask(serial_t *serial)
             if (byte == StartByte)
             {
                 serial->_private.rx_Buffer[serial->_private.rx_Length++] = byte;
+            }
+
+            if (byte == ResetByte)
+            {
+                serial->_private.resetRequested = true;
+                continue;
             }
         }
         else
