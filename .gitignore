@@ -14,3 +14,4 @@ lorenzSystemSimulator/data/lorenz_trajectories*.npy
 *.a
 *.dSYM/
 .vscode/
+.csv/
