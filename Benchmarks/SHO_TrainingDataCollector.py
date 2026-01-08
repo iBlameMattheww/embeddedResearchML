@@ -13,6 +13,8 @@ from tqdm import tqdm
 PORT = "/dev/tty.usbmodem1201"
 BAUD = 115200
 TIMEOUT = 1.0
+MAX_TRAJECTORY_TIMEOUT = 5
+MMAX_TRAJECTORY_RETRY = 10
 
 PKT_START  = 0xA5
 PKT_PHASE  = 0x01
@@ -70,6 +72,8 @@ def CollectFirstFiftyInitialValuesFromDataset(data):
 def SendReset(ser):
     ser.write(bytes([PKT_RESET]))
     ser.flush()
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
     time.sleep(0.5) 
 
 def RunInferenceTrajectory(index, ser, records, q0, p0, stepSize, numSteps):
@@ -80,6 +84,7 @@ def RunInferenceTrajectory(index, ser, records, q0, p0, stepSize, numSteps):
     payload = struct.pack("<i I i i", stepSize, numSteps, p0_q16_16, q0_q16_16)
     packet = struct.pack("<BBB", 0xAA, 0x01, len(payload)) + payload
     ser.write(packet)
+    print("Sending packet: ", packet)
     timeStart = time.time()
 
     buffer = bytearray()
@@ -88,6 +93,10 @@ def RunInferenceTrajectory(index, ser, records, q0, p0, stepSize, numSteps):
     stepIndex = 0
 
     while not done:
+        if time.time() - timeStart > MAX_TRAJECTORY_TIMEOUT:
+            print(f"Timeout reached for trajectory {index}, moving to next.")
+            return False
+
         buffer.extend(ser.read(256))
 
         while True:
@@ -158,6 +167,7 @@ def RunInferenceTrajectory(index, ser, records, q0, p0, stepSize, numSteps):
                 break
 
             buffer.pop(0)
+    return True
 
 def CreateOutputDirectory(path):
     if not os.path.exists(path):
@@ -178,12 +188,27 @@ def main():
     ser = SetupSerialConnection()
     records = []
 
-    stepSize = QuantizeToQ16_16(0.5)  # dt for 500 steps over one period
     numSteps = 500
+    stepSize = QuantizeToQ16_16(0.05)  # dt for 500 steps over one period
 
     for index, (q0, p0) in enumerate(tqdm(initialConditions, desc="Running Inference Trajectories")):
-        RunInferenceTrajectory(index, ser, records, q0, p0, stepSize, numSteps)
-        time.sleep(1)  # Small delay between trajectories
+        success = False
+
+        for attempt in range(MMAX_TRAJECTORY_RETRY):
+            success = RunInferenceTrajectory(index, ser, records, q0, p0, stepSize, numSteps)
+            if success:
+                break
+
+            print(f"[RETRY] Traj {index} with initial ({q0}, {p0}), attempt {attempt + 1}")
+            ser.close()
+            time.sleep(1.5)
+            ser = serial.Serial(PORT, BAUD, timeout=TIMEOUT)
+            SendReset(ser)
+            time.sleep(1)
+    
+        if not success:
+            print("Failed to complete trajectory after retries.")
+            break
 
     ser.close()
 

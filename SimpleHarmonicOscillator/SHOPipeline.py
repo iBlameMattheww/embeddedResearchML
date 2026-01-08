@@ -18,7 +18,7 @@ def GenerateSHOData(samples):
     m = 1.0  # mass
     T = 2 * np.pi  # total time
     steps = 500
-    dt = T / (steps - 1)
+    dt = 0.05
     totalData = []
     
     for sample in range(samples):

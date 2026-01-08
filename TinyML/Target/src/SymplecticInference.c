@@ -60,6 +60,7 @@ void SymplecticInference_Task(void)
             {
                 /* Invalid number of steps, ignore */
                 SerialSendDone(symplecticInferenceContext.serial);
+                ClearSerialCommand(symplecticInferenceContext.serial);
                 symplecticInferenceContext.state = InferenceIdle;
                 symplecticInferenceContext.runAccepted = false;
                 return;
@@ -72,6 +73,9 @@ void SymplecticInference_Task(void)
             if (payload.numSteps == 0)
             {
                 SerialSendDone(symplecticInferenceContext.serial);
+                ClearSerialCommand(symplecticInferenceContext.serial);
+                symplecticInferenceContext.state = InferenceIdle;
+                symplecticInferenceContext.runAccepted = false;
                 return;
             }
 

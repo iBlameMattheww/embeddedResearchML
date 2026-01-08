@@ -97,22 +97,22 @@ void SerialTask(serial_t *serial)
 
         if (serial->_private.rx_Length == 0)
         {
+            if (byte == ResetByte)
+            {
+                serial->_private.resetRequested = true;
+                serial->_private.rx_Length = 0;
+                continue;
+            }
+
             if (byte == AckByte)
             {
                 serial->_private.acknowledged = true;
-                serial->_private.rx_Length = 0;
                 continue;
             }
 
             if (byte == StartByte)
             {
                 serial->_private.rx_Buffer[serial->_private.rx_Length++] = byte;
-            }
-
-            if (byte == ResetByte)
-            {
-                serial->_private.resetRequested = true;
-                continue;
             }
         }
         else
