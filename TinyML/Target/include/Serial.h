@@ -28,9 +28,11 @@ typedef struct
         uint8_t pendingPayloadLength;
         uint8_t sequenceNumber;
         bool acknowledged;
+        bool resetRequested;
     } _private; 
 } serial_t;
 
+void SerialReset(serial_t *serial);
 void SerialSendDone(serial_t *serial);
 void ClearSerialCommand(serial_t *serial);
 void SerialSendPhasePacket(serial_t *serial, int32_t p, int32_t q);

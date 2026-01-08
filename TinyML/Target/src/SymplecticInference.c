@@ -19,8 +19,27 @@ static struct
     bool runAccepted;
 } symplecticInferenceContext;
 
+static void SymplecticInference_Reset(void)
+{
+    symplecticInferenceContext.state = InferenceIdle;
+    symplecticInferenceContext.runAccepted = false;
+    symplecticInferenceContext.bufferedSteps = 0;
+    symplecticInferenceContext.TX_Index = 0;
+    symplecticInferenceContext.totalSteps = 0;
+    memset(&symplecticInferenceContext.phase, 0, sizeof(phaseState_t));
+    memset(symplecticInferenceContext.phaseBufferP, 0, sizeof(int32_t) * MAX_STEPS);
+    memset(symplecticInferenceContext.phaseBufferQ, 0, sizeof(int32_t) * MAX_STEPS);
+    SerialReset(symplecticInferenceContext.serial);
+}
+
 void SymplecticInference_Task(void)
 {
+    if (symplecticInferenceContext.serial->_private.resetRequested)
+    {
+        SymplecticInference_Reset();
+        symplecticInferenceContext.serial->_private.resetRequested = false;
+    }
+
     /* ---------------- IDLE: wait for RUN ---------------- */
     if (symplecticInferenceContext.state == InferenceIdle &&
         IsSerialCommandAvailable(symplecticInferenceContext.serial) &&
@@ -41,6 +60,7 @@ void SymplecticInference_Task(void)
             {
                 /* Invalid number of steps, ignore */
                 SerialSendDone(symplecticInferenceContext.serial);
+                ClearSerialCommand(symplecticInferenceContext.serial);
                 symplecticInferenceContext.state = InferenceIdle;
                 symplecticInferenceContext.runAccepted = false;
                 return;
@@ -53,6 +73,9 @@ void SymplecticInference_Task(void)
             if (payload.numSteps == 0)
             {
                 SerialSendDone(symplecticInferenceContext.serial);
+                ClearSerialCommand(symplecticInferenceContext.serial);
+                symplecticInferenceContext.state = InferenceIdle;
+                symplecticInferenceContext.runAccepted = false;
                 return;
             }
 
@@ -122,19 +145,18 @@ void SymplecticInference_Task(void)
         else
         {
             SerialSendDone(symplecticInferenceContext.serial);
-            tud_cdc_n_write_flush(CDC_ITF);
-            symplecticInferenceContext.state = InferenceIdle;
-            symplecticInferenceContext.runAccepted = false;
-            symplecticInferenceContext.bufferedSteps = 0;
+            
+            if (symplecticInferenceContext.serial->_private.acknowledged == true)
+            {
+                /* DONE acknowledged, finish */
+                tud_cdc_n_write_flush(CDC_ITF);
+                symplecticInferenceContext.state = InferenceIdle;
+                symplecticInferenceContext.runAccepted = false;
+                symplecticInferenceContext.bufferedSteps = 0;
+                symplecticInferenceContext.serial->_private.acknowledged = false;
+            } 
         }
     }
-}
-
-void SymplecticInference_Reset(void)
-{
-    symplecticInferenceContext.state = InferenceIdle;
-    symplecticInferenceContext.runAccepted = false;
-    symplecticInferenceContext.totalSteps = 0;
 }
 
 void SymplecticInference_Init(serial_t *serial, symplecticModel_t *model)

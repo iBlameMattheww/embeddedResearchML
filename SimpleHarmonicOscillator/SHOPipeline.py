@@ -6,28 +6,28 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(CURRENT_DIR, 'data')
 SHO_DATA_PATH = os.path.join(DATA_PATH, 'sho_trajectories.npy')
 
-def velocityVerlet(state, dt):
+def VelocityVerlet(state, dt):
     yHalf = state[1] - 0.5 * dt * state[0]
     xNew = state[0] + dt * yHalf
     yNew = yHalf - 0.5 * dt * xNew
     return [xNew, yNew]
 
 
-def generateSHOData(samples):
+def GenerateSHOData(samples):
     k = 1.0  # spring constant
     m = 1.0  # mass
     T = 2 * np.pi  # total time
     steps = 500
-    dt = T / (steps - 1)
+    dt = 0.05
     totalData = []
     
     for sample in range(samples):
-        x, y = np.random.uniform(-1, 1, 2)
+        q, p = np.random.uniform(-1, 1, 2)
         trajectory = np.zeros((steps, 2))
 
         for step in range(steps):
-            trajectory[step] = [x, y]
-            x, y = velocityVerlet([x, y], dt)
+            trajectory[step] = [q, p]
+            q, p = VelocityVerlet([q, p], dt)
         
         totalData.append(trajectory)
     
@@ -51,7 +51,7 @@ def generateSHOData(samples):
 
 
 def main():
-    generateSHOData(samples=250)
+    GenerateSHOData(samples=250)
 
 if __name__ == "__main__":
     main()
