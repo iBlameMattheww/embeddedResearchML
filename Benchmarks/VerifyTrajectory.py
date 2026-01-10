@@ -5,11 +5,9 @@ import matplotlib.pyplot as plt
 # -------------------------------
 # CONFIG
 # -------------------------------
-CSV_PATH = "Benchmarks/SHO_Results/sho_inference_results.csv"
-OUTPUT_PATH = "/Users/matthewobrien/Documents/sympnet_compare.svg"
+CSV_PATH = "Benchmarks/SHO_Results/sho_test_OOD_inference_results.csv"
 
 STEPS = 500
-T = 2 * np.pi
 DT = 0.05
 
 # -------------------------------
@@ -86,5 +84,4 @@ plt.title("Time Series")
 plt.legend()
 
 plt.tight_layout()
-plt.savefig(OUTPUT_PATH)
 plt.show()

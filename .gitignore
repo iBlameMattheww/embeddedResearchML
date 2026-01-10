@@ -15,3 +15,5 @@ lorenzSystemSimulator/data/lorenz_trajectories*.npy
 *.dSYM/
 .vscode/
 .csv/
+Benchmarks/SHO_Results
+SimpleHarmonicOscillator/data

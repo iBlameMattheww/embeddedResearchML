@@ -20,9 +20,8 @@ def VelocityVerlet(state, dt):
 def GenerateSHO_Test_IID_Data(samples):
     k = 1.0  # spring constant
     m = 1.0  # mass
-    T = 2 * np.pi  # total time
     steps = 500
-    dt = T / (steps - 1)
+    dt = 0.05
     totalData = []
     
     for sample in range(samples):
@@ -55,13 +54,19 @@ def GenerateSHO_Test_IID_Data(samples):
 def GenerateSHO_Test_OOD_Data(samples):
     k = 1.0  # spring constant
     m = 1.0  # mass
-    T = 2 * np.pi  # total time
     steps = 500
-    dt = T / (steps - 1)
+    dt = 0.05
     totalData = []
     
     for sample in range(samples):
-        q, p = RNG_OOD.uniform(-1.5, 1.5, 2)
+        if RNG_OOD.random() < 0.5:
+            q = RNG_OOD.uniform(-1.5, -1)
+        else:
+            q = RNG_OOD.uniform(1, 1.5)
+        if RNG_OOD.random() < 0.5:
+            p = RNG_OOD.uniform(-1.5, -1)
+        else:
+            p = RNG_OOD.uniform(1, 1.5)
         trajectory = np.zeros((steps, 2))
 
         for step in range(steps):
