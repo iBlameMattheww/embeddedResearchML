@@ -27,7 +27,7 @@ DONE_PACKET_SIZE  = 5
 # -------------------------------
 # Training File Constants
 # -------------------------------
-TRAINING_DATA_FILE = "SimpleHarmonicOscillator/data/sho_trajectories.npy"
+TEST_IID_DATA_FILE = "SimpleHarmonicOscillator/data/sho_Test_IID_Trajectories.npy"
 RESULTS_DIR = "Benchmarks/SHO_Results"
 
 def QuantizeToQ16_16(value: float) -> int:
@@ -64,7 +64,7 @@ def DataLoader(path):
 
 def CollectFirstFiftyInitialValuesFromDataset(data): 
     initialConditions = []
-    for trajectory in data[:50]:
+    for trajectory in data:
         q0, p0 = trajectory[0]
         initialConditions.append((q0, p0))
     return initialConditions
@@ -177,12 +177,12 @@ def CreateOutputDirectory(path):
         print(f"Directory already exists: {path}")
 
 def DataframeToCSV(df):
-    outputFile = os.path.join(RESULTS_DIR, "sho_training_inference_results.csv")
+    outputFile = os.path.join(RESULTS_DIR, "sho_test_IID_inference_results.csv")
     df.to_csv(outputFile, index=False)
     print(f"Data saved to {outputFile}")
 
 def main():
-    data = DataLoader(TRAINING_DATA_FILE)
+    data = DataLoader(TEST_IID_DATA_FILE)
     initialConditions = CollectFirstFiftyInitialValuesFromDataset(data)
 
     ser = SetupSerialConnection()

@@ -16,7 +16,6 @@ def VelocityVerlet(state, dt):
 def GenerateSHOData(samples):
     k = 1.0  # spring constant
     m = 1.0  # mass
-    T = 2 * np.pi  # total time
     steps = 500
     dt = 0.05
     totalData = []
