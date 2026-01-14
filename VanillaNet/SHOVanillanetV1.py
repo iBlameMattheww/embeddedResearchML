@@ -26,7 +26,7 @@ class VanillaNet(torch.nn.Module):
 
     def forward(self, x, dt):
         dx = self.fc2(self.relu(self.fc1(x)))
-        return x + dt + dx
+        return x + dt * dx
     
 def LoadDataset(path, dt, train_frac = 0.8):
     data = np.load(path)
