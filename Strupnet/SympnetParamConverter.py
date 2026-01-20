@@ -6,7 +6,7 @@ import os
 # PATHS
 # --------------------------------------------------
 PARAMS_PATH = os.path.join("Strupnet", "params", "sympnet_params.json") 
-SYMPNET_WEIGHT_FOLDER = os.path.join("Strupnet", "Weights", "sympnet_int8_weights")
+SYMPNET_WEIGHT_FOLDER = os.path.join("Strupnet", "Weights", "sympnet_int32_weights")
 
 Q16_SCALE = 1 << 16  # 65536
 

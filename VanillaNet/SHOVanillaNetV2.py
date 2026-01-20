@@ -13,7 +13,7 @@ DEVICE = torch.device("cpu")
 print("[INFO] Using device:", DEVICE)
 
 EPOCHS = 1000
-HIDDEN_DIM = 16
+HIDDEN_DIM = 32
 DT = 0.05
 
 class VanillaNet(torch.nn.Module):

@@ -51,6 +51,11 @@ def SymplecticStep(p, q, params, h):
         p, q = P_layer_step(p, q, layer, h)
     return p, q
 
+def VelocityVerlet(state, dt):
+    yHalf = state[1] - 0.5 * dt * state[0]
+    xNew = state[0] + dt * yHalf
+    yNew = yHalf - 0.5 * dt * xNew
+    return [xNew, yNew] 
 
 # =========================
 # Main simulation
@@ -58,44 +63,65 @@ def SymplecticStep(p, q, params, h):
 def main():
     params = GetParams()
 
-    T = 1000
+    T = 500
     h = 0.05          # MUST match training timestep
     p0, q0 = 0.0, 1.0
 
-    traj = np.zeros((T, 2))
+    learnedTraj = np.zeros((T, 2))
+    groundTruthTraj = np.zeros((T, 2))
+    
     p, q = p0, q0
+    q_gt, p_gt = q0, p0
 
     for t in range(T):
-        traj[t] = [p, q]
+        learnedTraj[t] = [p, q]
+        groundTruthTraj[t] = [p_gt, q_gt]
         p, q = SymplecticStep(p, q, params, h)
+        q_gt, p_gt = VelocityVerlet([q_gt, p_gt], h)
 
-    return traj
+    return learnedTraj, groundTruthTraj
 
 
 # =========================
 # Run + plots
 # =========================
-traj = main()
+learnedTraj, groundTruthTraj = main()
 
-# Phase space
-plt.figure()
-plt.plot(traj[:, 1], traj[:, 0])
+plt.figure(figsize=(12, 5))
+
+# ======================
+# Phase space (left)
+# ======================
+plt.subplot(1, 2, 1)
+plt.plot(learnedTraj[:, 1], learnedTraj[:, 0],
+         label='Learned Trajectory (SympNet)')
+plt.plot(groundTruthTraj[:, 1], groundTruthTraj[:, 0],
+         linestyle='dashed', label='Ground Truth')
 plt.xlabel("q (position)")
 plt.ylabel("p (momentum)")
+plt.title("Phase Space")
 plt.axis("equal")
-plt.title("Phase space: learned SympNet integrator")
-plt.show()
+plt.grid(True)
+plt.legend()
 
-
-# Energy
+# ======================
+# Energy (right)
+# ======================
 def energy(p, q):
     return 0.5 * (p**2 + q**2)
 
-E = energy(traj[:, 0], traj[:, 1])
+E = energy(learnedTraj[:, 0], learnedTraj[:, 1])
+E_gt = energy(groundTruthTraj[:, 0], groundTruthTraj[:, 1])
 
-plt.figure()
-plt.plot(E)
+plt.subplot(1, 2, 2)
+plt.plot(E, label='Learned Energy (SympNet)')
+plt.plot(E_gt, linestyle='--', label='Ground Truth Energy')
 plt.xlabel("Time step")
 plt.ylabel("Energy")
-plt.title("Energy vs time")
+plt.title("Energy vs Time")
+plt.grid(True)
+plt.legend()
+
+# Layout + show
+plt.tight_layout()
 plt.show()
