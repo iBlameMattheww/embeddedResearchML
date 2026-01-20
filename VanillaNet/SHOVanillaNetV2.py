@@ -7,7 +7,7 @@ import os
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PARAMS_PATH = os.path.join(CURRENT_DIR, 'params')
 PARAMS_PATH = os.path.join(PARAMS_PATH, 'vanillanet_paramsV2.json')
-DATASET_PATH = os.path.join("simpleHarmonicOscillator", "data", "sho_trajectories.npy")
+DATASET_PATH = os.path.join("SimpleHarmonicOscillator", "data", "sho_trajectories.npy")
 
 DEVICE = torch.device("cpu")
 print("[INFO] Using device:", DEVICE)
