@@ -14,10 +14,10 @@ void tearDown(void)
 activations_test.cpp content    
 */
 void Test_Vanilla_Init_SetsLayerCount(void);
-void Test_VanillaStep_SingleLayer_PositiveReLU(void);
-void Test_VanillaStep_ReLU_ClampsNegative(void);
+void Test_VanillaStep_IsDeterministic(void);
 void Test_VanillaStep_StepSizeScaling(void);
-void Test_VanillaStep_TwoLayers_Compose(void);
+void Test_VanillaStep_ZeroStepSize_NoChange(void);
+void Test_VanillaStep_StateRemainsFinite(void);
 
 /* 
 Utils_test.cpp content    
@@ -46,10 +46,10 @@ int main(void)
 
     // Activations tests
     RUN_TEST(Test_Vanilla_Init_SetsLayerCount);
-    RUN_TEST(Test_VanillaStep_SingleLayer_PositiveReLU);
-    RUN_TEST(Test_VanillaStep_ReLU_ClampsNegative);
+    RUN_TEST(Test_VanillaStep_IsDeterministic);
     RUN_TEST(Test_VanillaStep_StepSizeScaling);
-    RUN_TEST(Test_VanillaStep_TwoLayers_Compose);
+    RUN_TEST(Test_VanillaStep_ZeroStepSize_NoChange);
+    RUN_TEST(Test_VanillaStep_StateRemainsFinite);
 
     // Utils tests
     RUN_TEST(Test_TypicalSympnetDotProduct);

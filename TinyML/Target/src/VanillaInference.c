@@ -101,7 +101,7 @@ void VanillaInference_Task(void)
     {
         if (vanillaInferenceContext.bufferedSteps < vanillaInferenceContext.totalSteps)
         {
-            SympnetStep(
+            VanillaStep(
                 vanillaInferenceContext.model,
                 &vanillaInferenceContext.phase,
                 vanillaInferenceContext.stepSize

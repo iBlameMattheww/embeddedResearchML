@@ -6,23 +6,81 @@ static int32_t Relu(int32_t x)
     return x;
 }
 
-static void VanillaLayerDerivative(const phaseState_t *state, const vanillaLayer_t *layer, int32_t *dx)
+static void Dense_ReLU(
+    const int32_t *input,
+    int32_t *output,
+    const int32_t *weights,
+    const int32_t *biases,
+    uint8_t inputSize,
+    uint8_t outputSize
+)
 {
-    int32_t input[2] = { state->p, state->q };  // Q16.16
-
-    for (uint8_t i = 0; i < layer->_private.outputSize; i++)
+    for (uint8_t i = 0; i < outputSize; i++)
     {
-        int64_t acc = layer->_private.biases[i];  // Q16.16
-        
-        for (uint8_t j = 0; j < layer->_private.inputSize; j++)
+        int64_t acc = biases[i];
+
+        for (uint8_t j = 0; j < inputSize; j++)
         {
-            int32_t weight = layer->_private.weights[i * layer->_private.inputSize + j];
-            acc += ((int64_t)weight * input[j]) >> 16;  // Q16.16
+            acc += ((int64_t)weights[i * inputSize + j] * input[j]) >> 16;
         }
 
-        acc = Relu((int32_t)acc);  // Q16.16
-        dx[i] = CLAMP((int32_t)acc, INT32_MIN, INT32_MAX);  // Q16.16
+        acc = Relu((int32_t)acc);
+        output[i] = CLAMP((int32_t)acc, INT32_MIN, INT32_MAX);
     }
+}
+
+static void Dense_Linear(
+    const int32_t *input,
+    int32_t *output,
+    const int32_t *weights,
+    const int32_t *biases,
+    uint8_t inputSize,
+    uint8_t outputSize
+)
+{
+    for (uint8_t i = 0; i < outputSize; i++)
+    {
+        int64_t acc = biases[i];
+
+        for (uint8_t j = 0; j < inputSize; j++)
+        {
+            acc += ((int64_t)weights[i * inputSize + j] * input[j]) >> 16;
+        }
+
+        output[i] = CLAMP((int32_t)acc, INT32_MIN, INT32_MAX);
+    }
+}
+
+static void VanillaForward(
+    const phaseState_t *state,
+    int32_t *dx
+)
+{
+    int32_t x0[2] = { state->p, state->q };  // Q16.16
+    int32_t h1[FC1_OUT_DIM];
+    int32_t out[2];
+
+    Dense_ReLU(
+    x0,
+    h1,
+    (const int32_t *)fc1_weights,
+    fc1_biases,
+    FC1_IN_DIM,
+    FC1_OUT_DIM
+    );
+
+
+    Dense_Linear(
+        h1,
+        out,
+        (const int32_t *)fc2_weights,
+        fc2_biases,
+        FC2_IN_DIM,
+        FC2_OUT_DIM
+    );
+
+    dx[0] = out[0];
+    dx[1] = out[1];
 }
 
 static void VanillaEulerUpdate(phaseState_t *state, const int32_t *dx, int32_t stepSize)
@@ -34,20 +92,13 @@ static void VanillaEulerUpdate(phaseState_t *state, const int32_t *dx, int32_t s
     state->q = CLAMP(state->q, INT32_MIN, INT32_MAX);
 }
 
-static void VanillaLayerStep(phaseState_t *state, const vanillaLayer_t *layer, int32_t stepSize)
-{
-    int32_t dx[2] = {0};
-
-    VanillaLayerDerivative(state, layer, dx);
-    VanillaEulerUpdate(state, dx, stepSize);
-}
-
 void VanillaStep(vanillaModel_t *model, phaseState_t *state, int32_t stepSize)
 {
-    for (uint8_t i = 0; i < model->_private.numLayers; i++)
-    {
-        VanillaLayerStep(state, &model->_private.layers[i], stepSize);
-    }
+    (void) model;
+    int32_t dx[2] = {0};
+
+    VanillaForward(state, dx);
+    VanillaEulerUpdate(state, dx, stepSize);
 }
 
 void Vanilla_Init(vanillaModel_t *model, uint8_t numLayers)
