@@ -1,100 +1,241 @@
 #include "unity.h"
 #include "Activations.h"
-#include "Utils.h"
-#include <cmath>
+#include <stdint.h>
 
-void Test_Relu_Positive(void) 
+/* ============================================================
+ * Helpers
+ * ============================================================ */
+
+#define Q16(x) ((int32_t)((x) * 65536))
+
+/* ============================================================
+ * Test: Vanilla_Init wires layers correctly
+ * ============================================================ */
+
+void Test_Vanilla_Init_SetsLayerCount(void)
 {
-    TEST_ASSERT_EQUAL_UINT8(5, Relu(5));
+    vanillaModel_t model = {0};
+
+    Vanilla_Init(&model, 2);
+
+    TEST_ASSERT_EQUAL_UINT8(2, model._private.numLayers);
+    TEST_ASSERT_NOT_NULL(model._private.layers);
 }
 
-void Test_Relu_Zero(void) 
+/* ============================================================
+ * Test: Single-layer Euler step, positive region (ReLU active)
+ * ============================================================ */
+
+void Test_VanillaStep_SingleLayer_PositiveReLU(void)
 {
-    TEST_ASSERT_EQUAL_UINT8(0, Relu(0));
-}
+    /*
+        dx = W * [p q] + b
+        Use identity weights so dx = [p q]
+        stepSize = 1.0
 
-void Test_Relu_Negative(void) 
-{
-    TEST_ASSERT_EQUAL_UINT8(0, Relu(-7));
-}
+        p_next = p + p
+        q_next = q + q
+    */
 
-void Test_Exp_Approx_0(void)
-{
-    float expected = std::exp(0);
-    int32_t actual_q16 = Exp_Approx(0 * 65536); // Q16 fixed-point result
-    double actual = actual_q16 / 65536.0;
-    double rel_error = std::abs(actual - expected) / expected;
-    TEST_ASSERT_TRUE(rel_error < 0.0001); // 0.1% tolerance
-}
+    static int32_t weights[] = {
+        Q16(1.0), Q16(0.0),
+        Q16(0.0), Q16(1.0)
+    };
 
-void Test_Exp_Approx_Full_Range(void)
-{
-    const int32_t min_q16 = -8 * 65536;
-    const int32_t max_q16 =  8 * 65536;
-    const int32_t step = 1024;
+    static int32_t biases[] = {
+        Q16(0.0),
+        Q16(0.0)
+    };
 
-    for (int32_t x_q16 = min_q16; x_q16 <= max_q16; x_q16 += step) {
-        float x = x_q16 / 65536.0f;
-        float expected = std::exp(x);
-        float actual = Exp_Approx(x_q16) / 65536.0f;
+    static vanillaLayer_t layers[] = {
+        { ._private = {
+            .weights = weights,
+            .biases = biases,
+            .inputSize = 2,
+            .outputSize = 2
+        }}
+    };
 
-        float abs_err = fabsf(actual - expected);
-        float rel_err = fabsf(actual - expected) / expected;
-
-        // absolute error OK for tiny exp(-x)
-        bool ok_abs = abs_err < 1e-4f;
-
-        // relative error OK for normal values
-        bool ok_rel = rel_err < 0.008f;
-
-        if (!(ok_abs || ok_rel)) {
-            printf("FAIL: x=%f expected=%f actual=%f abs_err=%f rel_err=%f\n",
-                   x, expected, actual, abs_err, rel_err);
-            UNITY_TEST_FAIL(__LINE__, "Exp_Approx error too high");
+    vanillaModel_t model = {
+        ._private = {
+            .layers = layers,
+            .numLayers = 1
         }
-    }
+    };
+
+    phaseState_t state = {
+        .p = Q16(2.0),
+        .q = Q16(3.0)
+    };
+
+    VanillaStep(&model, &state, Q16(1.0));
+
+    TEST_ASSERT_EQUAL_INT32(Q16(4.0), state.p);
+    TEST_ASSERT_EQUAL_INT32(Q16(6.0), state.q);
 }
 
-void Test_Softmax_SineDataset_SingleLogit_Returns255(void)
+/* ============================================================
+ * Test: ReLU clamps negative derivative to zero
+ * ============================================================ */
+
+void Test_VanillaStep_ReLU_ClampsNegative(void)
 {
-    int16_t logits[] = {1234};   // arbitrary value
-    Softmax(logits, 1);
-    TEST_ASSERT_EQUAL_UINT16(255, logits[0]);
+    /*
+        dx = -p, -q  → ReLU → 0
+        state should not change
+    */
+
+    static int32_t weights[] = {
+        Q16(-1.0), Q16(0.0),
+        Q16(0.0),  Q16(-1.0)
+    };
+
+    static int32_t biases[] = {
+        Q16(0.0),
+        Q16(0.0)
+    };
+
+    static vanillaLayer_t layers[] = {
+        { ._private = {
+            .weights = weights,
+            .biases = biases,
+            .inputSize = 2,
+            .outputSize = 2
+        }}
+    };
+
+    vanillaModel_t model = {
+        ._private = {
+            .layers = layers,
+            .numLayers = 1
+        }
+    };
+
+    phaseState_t state = {
+        .p = Q16(2.0),
+        .q = Q16(3.0)
+    };
+
+    VanillaStep(&model, &state, Q16(1.0));
+
+    TEST_ASSERT_EQUAL_INT32(Q16(2.0), state.p);
+    TEST_ASSERT_EQUAL_INT32(Q16(3.0), state.q);
 }
 
-void test_Softmax_LorenzDataset_3Values_NormalizedAndScaled(void)
+/* ============================================================
+ * Test: Step size scaling works correctly
+ * ============================================================ */
+
+void Test_VanillaStep_StepSizeScaling(void)
 {
-    int16_t logits[] = { 1200, 800, 400 };
-    Softmax(logits, 3);
-    uint16_t sum = logits[0] + logits[1] + logits[2];
-    TEST_ASSERT_INT_WITHIN(2, 255, sum);   // allow rounding error ±2
-    TEST_ASSERT_TRUE(logits[0] > logits[1]);
-    TEST_ASSERT_TRUE(logits[1] >= logits[2]);
+    /*
+        dx = [1, 1]
+        stepSize = 0.5
+
+        p_next = p + 0.5
+        q_next = q + 0.5
+    */
+
+    static int32_t weights[] = {
+        Q16(0.0), Q16(0.0),
+        Q16(0.0), Q16(0.0)
+    };
+
+    static int32_t biases[] = {
+        Q16(1.0),
+        Q16(1.0)
+    };
+
+    static vanillaLayer_t layers[] = {
+        { ._private = {
+            .weights = weights,
+            .biases = biases,
+            .inputSize = 2,
+            .outputSize = 2
+        }}
+    };
+
+    vanillaModel_t model = {
+        ._private = {
+            .layers = layers,
+            .numLayers = 1
+        }
+    };
+
+    phaseState_t state = {
+        .p = Q16(1.0),
+        .q = Q16(1.0)
+    };
+
+    VanillaStep(&model, &state, Q16(0.5));
+
+    TEST_ASSERT_EQUAL_INT32(Q16(1.5), state.p);
+    TEST_ASSERT_EQUAL_INT32(Q16(1.5), state.q);
 }
 
-void test_Softmax_NegativeValues_StableNormalization(void)
+/* ============================================================
+ * Test: Multiple layers compose correctly
+ * ============================================================ */
+
+void Test_VanillaStep_TwoLayers_Compose(void)
 {
-    int16_t logits[] = { -300, -400, -500 };
-    Softmax(logits, 3);
+    /*
+        Layer 1: dx = [1, 1]
+        Layer 2: dx = [1, 1]
+        step = 1
 
-    for (int i = 0; i < 3; i++)
-    {
-        TEST_ASSERT_TRUE(logits[i] >= 0);
-        TEST_ASSERT_TRUE(logits[i] <= 255);
-    }
+        Net effect: +2 on p and q
+    */
 
-    uint16_t sum = logits[0] + logits[1] + logits[2];
-    TEST_ASSERT_INT_WITHIN(2, 255, sum);
-}
+    static int32_t weights1[] = {
+        Q16(0.0), Q16(0.0),
+        Q16(0.0), Q16(0.0)
+    };
 
-void test_Softmax_LargeValues_NoOverflow(void)
-{
-    int16_t logits[] = { 30000, 29000, 28000 };
-    Softmax(logits, 3);
+    static int32_t biases1[] = {
+        Q16(1.0),
+        Q16(1.0)
+    };
 
-    for (int i = 0; i < 3; i++)
-        TEST_ASSERT_TRUE(logits[i] <= 255);
+    static int32_t weights2[] = {
+        Q16(0.0), Q16(0.0),
+        Q16(0.0), Q16(0.0)
+    };
 
-    uint16_t sum = logits[0] + logits[1] + logits[2];
-    TEST_ASSERT_INT_WITHIN(2, 255, sum);
+    static int32_t biases2[] = {
+        Q16(1.0),
+        Q16(1.0)
+    };
+
+    static vanillaLayer_t layers[] = {
+        { ._private = {
+            .weights = weights1,
+            .biases = biases1,
+            .inputSize = 2,
+            .outputSize = 2
+        }},
+        { ._private = {
+            .weights = weights2,
+            .biases = biases2,
+            .inputSize = 2,
+            .outputSize = 2
+        }}
+    };
+
+    vanillaModel_t model = {
+        ._private = {
+            .layers = layers,
+            .numLayers = 2
+        }
+    };
+
+    phaseState_t state = {
+        .p = Q16(0.0),
+        .q = Q16(0.0)
+    };
+
+    VanillaStep(&model, &state, Q16(1.0));
+
+    TEST_ASSERT_EQUAL_INT32(Q16(2.0), state.p);
+    TEST_ASSERT_EQUAL_INT32(Q16(2.0), state.q);
 }
