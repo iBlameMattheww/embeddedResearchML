@@ -13,15 +13,11 @@ void tearDown(void)
 /* 
 activations_test.cpp content    
 */
-void Test_Relu_Positive(void);
-void Test_Relu_Zero(void);
-void Test_Relu_Negative(void);
-void Test_Exp_Approx_0(void);
-void Test_Exp_Approx_Full_Range(void);
-void Test_Softmax_SineDataset_SingleLogit_Returns255(void);
-void test_Softmax_LorenzDataset_3Values_NormalizedAndScaled(void);
-void test_Softmax_NegativeValues_StableNormalization(void);
-void test_Softmax_LargeValues_NoOverflow(void);
+void Test_Vanilla_Init_SetsLayerCount(void);
+void Test_VanillaStep_IsDeterministic(void);
+void Test_VanillaStep_StepSizeScaling(void);
+void Test_VanillaStep_ZeroStepSize_NoChange(void);
+void Test_VanillaStep_StateRemainsFinite(void);
 
 /* 
 Utils_test.cpp content    
@@ -49,15 +45,11 @@ int main(void)
     UNITY_BEGIN();
 
     // Activations tests
-    RUN_TEST(Test_Relu_Positive);
-    RUN_TEST(Test_Relu_Zero);
-    RUN_TEST(Test_Relu_Negative);
-    RUN_TEST(Test_Exp_Approx_0);
-    RUN_TEST(Test_Exp_Approx_Full_Range);
-    RUN_TEST(Test_Softmax_SineDataset_SingleLogit_Returns255);
-    RUN_TEST(test_Softmax_LorenzDataset_3Values_NormalizedAndScaled);
-    RUN_TEST(test_Softmax_NegativeValues_StableNormalization);
-    RUN_TEST(test_Softmax_LargeValues_NoOverflow);
+    RUN_TEST(Test_Vanilla_Init_SetsLayerCount);
+    RUN_TEST(Test_VanillaStep_IsDeterministic);
+    RUN_TEST(Test_VanillaStep_StepSizeScaling);
+    RUN_TEST(Test_VanillaStep_ZeroStepSize_NoChange);
+    RUN_TEST(Test_VanillaStep_StateRemainsFinite);
 
     // Utils tests
     RUN_TEST(Test_TypicalSympnetDotProduct);

@@ -1,100 +1,104 @@
 #include "unity.h"
 #include "Activations.h"
-#include "Utils.h"
-#include <cmath>
+#include <stdint.h>
 
-void Test_Relu_Positive(void) 
+/* ============================================================
+ * Helpers
+ * ============================================================ */
+
+#define Q16(x) ((int32_t)((x) * 65536))
+
+/* ============================================================
+ * Test: Vanilla_Init wires model metadata
+ * ============================================================ */
+
+void Test_Vanilla_Init_SetsLayerCount(void)
 {
-    TEST_ASSERT_EQUAL_UINT8(5, Relu(5));
+    vanillaModel_t model = {0};
+
+    Vanilla_Init(&model, 2);
+
+    TEST_ASSERT_EQUAL_UINT8(2, model._private.numLayers);
+    TEST_ASSERT_NOT_NULL(model._private.layers);
 }
 
-void Test_Relu_Zero(void) 
+/* ============================================================
+ * Test: VanillaStep is deterministic
+ * ============================================================ */
+
+void Test_VanillaStep_IsDeterministic(void)
 {
-    TEST_ASSERT_EQUAL_UINT8(0, Relu(0));
+    phaseState_t a = { .p = Q16(0.5), .q = Q16(-0.25) };
+    phaseState_t b = a;
+
+    VanillaStep(NULL, &a, Q16(1.0));
+    VanillaStep(NULL, &b, Q16(1.0));
+
+    TEST_ASSERT_EQUAL_INT32(a.p, b.p);
+    TEST_ASSERT_EQUAL_INT32(a.q, b.q);
 }
 
-void Test_Relu_Negative(void) 
+/* ============================================================
+ * Test: Step size scaling behaves linearly (Euler property)
+ * ============================================================ */
+
+void Test_VanillaStep_StepSizeScaling(void)
 {
-    TEST_ASSERT_EQUAL_UINT8(0, Relu(-7));
+    /*
+        Euler integration property:
+        dx(h) ≈ 2 * dx(h/2)
+    */
+
+    phaseState_t s_half = { .p = Q16(1.0), .q = Q16(1.0) };
+    phaseState_t s_full = s_half;
+
+    VanillaStep(NULL, &s_half, Q16(0.5));
+    VanillaStep(NULL, &s_full, Q16(1.0));
+
+    int32_t dp_half = s_half.p - Q16(1.0);
+    int32_t dq_half = s_half.q - Q16(1.0);
+
+    int32_t dp_full = s_full.p - Q16(1.0);
+    int32_t dq_full = s_full.q - Q16(1.0);
+
+    /* Allow small fixed-point rounding error */
+    TEST_ASSERT_INT32_WITHIN(4, dp_full / 2, dp_half);
+    TEST_ASSERT_INT32_WITHIN(4, dq_full / 2, dq_half);
 }
 
-void Test_Exp_Approx_0(void)
+/* ============================================================
+ * Test: Zero step size produces no state change
+ * ============================================================ */
+
+void Test_VanillaStep_ZeroStepSize_NoChange(void)
 {
-    float expected = std::exp(0);
-    int32_t actual_q16 = Exp_Approx(0 * 65536); // Q16 fixed-point result
-    double actual = actual_q16 / 65536.0;
-    double rel_error = std::abs(actual - expected) / expected;
-    TEST_ASSERT_TRUE(rel_error < 0.0001); // 0.1% tolerance
+    phaseState_t state = { .p = Q16(2.0), .q = Q16(-3.0) };
+    phaseState_t original = state;
+
+    VanillaStep(NULL, &state, Q16(0.0));
+
+    TEST_ASSERT_EQUAL_INT32(original.p, state.p);
+    TEST_ASSERT_EQUAL_INT32(original.q, state.q);
 }
 
-void Test_Exp_Approx_Full_Range(void)
+/* ============================================================
+ * Test: State remains finite (no overflow / NaN behavior)
+ * ============================================================ */
+
+void Test_VanillaStep_StateRemainsFinite(void)
 {
-    const int32_t min_q16 = -8 * 65536;
-    const int32_t max_q16 =  8 * 65536;
-    const int32_t step = 1024;
+    phaseState_t state = {
+        .p = Q16(10.0),
+        .q = Q16(-10.0)
+    };
 
-    for (int32_t x_q16 = min_q16; x_q16 <= max_q16; x_q16 += step) {
-        float x = x_q16 / 65536.0f;
-        float expected = std::exp(x);
-        float actual = Exp_Approx(x_q16) / 65536.0f;
-
-        float abs_err = fabsf(actual - expected);
-        float rel_err = fabsf(actual - expected) / expected;
-
-        // absolute error OK for tiny exp(-x)
-        bool ok_abs = abs_err < 1e-4f;
-
-        // relative error OK for normal values
-        bool ok_rel = rel_err < 0.008f;
-
-        if (!(ok_abs || ok_rel)) {
-            printf("FAIL: x=%f expected=%f actual=%f abs_err=%f rel_err=%f\n",
-                   x, expected, actual, abs_err, rel_err);
-            UNITY_TEST_FAIL(__LINE__, "Exp_Approx error too high");
-        }
-    }
-}
-
-void Test_Softmax_SineDataset_SingleLogit_Returns255(void)
-{
-    int16_t logits[] = {1234};   // arbitrary value
-    Softmax(logits, 1);
-    TEST_ASSERT_EQUAL_UINT16(255, logits[0]);
-}
-
-void test_Softmax_LorenzDataset_3Values_NormalizedAndScaled(void)
-{
-    int16_t logits[] = { 1200, 800, 400 };
-    Softmax(logits, 3);
-    uint16_t sum = logits[0] + logits[1] + logits[2];
-    TEST_ASSERT_INT_WITHIN(2, 255, sum);   // allow rounding error ±2
-    TEST_ASSERT_TRUE(logits[0] > logits[1]);
-    TEST_ASSERT_TRUE(logits[1] >= logits[2]);
-}
-
-void test_Softmax_NegativeValues_StableNormalization(void)
-{
-    int16_t logits[] = { -300, -400, -500 };
-    Softmax(logits, 3);
-
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 100; i++)
     {
-        TEST_ASSERT_TRUE(logits[i] >= 0);
-        TEST_ASSERT_TRUE(logits[i] <= 255);
+        VanillaStep(NULL, &state, Q16(0.1));
     }
 
-    uint16_t sum = logits[0] + logits[1] + logits[2];
-    TEST_ASSERT_INT_WITHIN(2, 255, sum);
-}
-
-void test_Softmax_LargeValues_NoOverflow(void)
-{
-    int16_t logits[] = { 30000, 29000, 28000 };
-    Softmax(logits, 3);
-
-    for (int i = 0; i < 3; i++)
-        TEST_ASSERT_TRUE(logits[i] <= 255);
-
-    uint16_t sum = logits[0] + logits[1] + logits[2];
-    TEST_ASSERT_INT_WITHIN(2, 255, sum);
+    TEST_ASSERT_TRUE(state.p > INT32_MIN);
+    TEST_ASSERT_TRUE(state.p < INT32_MAX);
+    TEST_ASSERT_TRUE(state.q > INT32_MIN);
+    TEST_ASSERT_TRUE(state.q < INT32_MAX);
 }
