@@ -3,12 +3,14 @@ import numpy as np
 
 SHO_TRAINING_TRUTH_NPY = "SimpleHarmonicOscillator/data/sho_trajectories.npy"
 SHO_TRAINING_INFERENCE_CSV = "Benchmarks/SHO_Results/sho_training_inference_results.csv"
+SHO_TRAINING_PYTHON_INFERENCE_CSV = "VanillaNet/SHO_Results/train_fp32.csv"
 
 SHO_TEST_OOD_TRUTH_NPY = "SimpleHarmonicOscillator/data/sho_Test_OOD_Trajectories.npy"
 SHO_TEST_OOD_INFERENCE_CSV = "Benchmarks/SHO_Results/sho_test_OOD_inference_results.csv"
-
+SHO_TEST_OOD_PYTHON_INFERENCE_CSV = "VanillaNet/SHO_Results/ood_fp32.csv"
 SHO_TEST_IID_TRUTH_NPY = "SimpleHarmonicOscillator/data/sho_Test_IID_Trajectories.npy"
 SHO_TEST_IID_INFERENCE_CSV = "Benchmarks/SHO_Results/sho_test_IID_inference_results.csv"
+SHO_TEST_IID_PYTHON_INFERENCE_CSV = "VanillaNet/SHO_Results/iid_fp32.csv"
 
 import numpy as np
 
@@ -108,6 +110,14 @@ def main():
     AccuracyPipeline(SHO_TEST_IID_INFERENCE_CSV, SHO_TEST_IID_TRUTH_NPY)
     print("Test OOD Accuracy:")
     AccuracyPipeline(SHO_TEST_OOD_INFERENCE_CSV, SHO_TEST_OOD_TRUTH_NPY)
+
+
+    print("\nTraining Python Inference Accuracy:")
+    AccuracyPipeline(SHO_TRAINING_PYTHON_INFERENCE_CSV, SHO_TRAINING_TRUTH_NPY)
+    print("Test IID Python Inference Accuracy:")
+    AccuracyPipeline(SHO_TEST_IID_PYTHON_INFERENCE_CSV, SHO_TEST_IID_TRUTH_NPY) 
+    print("Test OOD Python Inference Accuracy:")
+    AccuracyPipeline(SHO_TEST_OOD_PYTHON_INFERENCE_CSV, SHO_TEST_OOD_TRUTH_NPY)
 
 if __name__ == "__main__":
     main()
