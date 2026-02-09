@@ -17,3 +17,4 @@ lorenzSystemSimulator/data/lorenz_trajectories*.npy
 .csv/
 Benchmarks/SHO_Results
 SimpleHarmonicOscillator/data
+VanillaNet/SHO_Results
