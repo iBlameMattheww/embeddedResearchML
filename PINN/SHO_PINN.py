@@ -18,7 +18,6 @@ DEVICE = torch.device("cpu")
 print("[INFO] Using device:", DEVICE)
 
 EPOCHS = 5000
-DT = 0.05
 DAMPING = 0
 W0 = 1
 
@@ -41,31 +40,6 @@ class FCN(nn.Module):
         x = self.fce(x)
         return x
 
-def LoadDataset(path, dt, train_frac = 0.8):
-    data = np.load(path)
-    data = data[:, : , [1, 0]]  # swap to (p, q) ordering
-
-    N = data.shape[0]
-    split = int(N * train_frac)
-
-    train = data[:split]
-    test = data[split:]
-
-    def MakePairs(arr):
-        x0 = arr[:, :-1, :]  # shape (samples, timesteps-1, 2)
-        x1 = arr[:, 1:, :]   # shape (samples, timesteps-1, 2)
-        return (
-            torch.tensor(x0.reshape(-1, 2), dtype=torch.float64),
-            torch.tensor(x1.reshape(-1, 2), dtype=torch.float64),
-        )
-    
-    x0_train, x1_train = MakePairs(train)
-    x0_test, x1_test = MakePairs(test)
-
-    dtTensorTrain = dt * torch.ones(len(x0_train), 1)
-    dtTensorTest = dt * torch.ones(len(x0_test), 1)
-
-    return x0_train, x1_train, dtTensorTrain, x0_test, x1_test, dtTensorTest
 
 def main():
     mu, k = 2*DAMPING, W0**2
@@ -78,8 +52,9 @@ def main():
     # Sample training states in phase space
     # --------------------------------------------
     N_SAMPLES = 5000
-    q = torch.randn(N_SAMPLES, 1, dtype=torch.float64)
-    p = torch.randn(N_SAMPLES, 1, dtype=torch.float64)
+    q = 2 * torch.rand(N_SAMPLES, 1, dtype=torch.float64) - 1
+    p = 2 * torch.rand(N_SAMPLES, 1, dtype=torch.float64) - 1
+
 
     x = torch.cat([p, q], dim=1).to(DEVICE)  # (p,q)
 

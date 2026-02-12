@@ -18,4 +18,4 @@ lorenzSystemSimulator/data/lorenz_trajectories*.npy
 Benchmarks/SHO_Results
 SimpleHarmonicOscillator/data
 VanillaNet/SHO_Results
-PINN/SHO_Results
+PINN/SHO_Results/
