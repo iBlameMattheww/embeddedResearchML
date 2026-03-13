@@ -87,11 +87,17 @@ static inline int32_t Tanh_Approx(int32_t x_q16)
         x_q16 = -x_q16;
     }
 
-    int32_t exp2x = Exp_Approx(x_q16 << 1);   // e^(2x)
+    int64_t widened = (int64_t)x_q16 << 1;
+    int32_t exp2x = Exp_Approx((int32_t)widened);   // e^(2x)
 
     int32_t num = exp2x - (1 << 16);          // e^(2x) - 1
     int32_t den = exp2x + (1 << 16);          // e^(2x) + 1
 
+    if (den == 0)
+    {
+        return sign << 16; // tanh approaches 1 as x -> +inf
+    }
+        
     int32_t tanh_q16 = ((int64_t)num << 16) / den;
 
     return sign * tanh_q16;

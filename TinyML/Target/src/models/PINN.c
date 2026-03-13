@@ -122,6 +122,9 @@ static void RungaKutta4_Update(
 
     state->p += ((int64_t)dt_over_6 * dp) >> 16;
     state->q += ((int64_t)dt_over_6 * dq) >> 16;
+
+    state->p = CLAMP(state->p, INT32_MIN, INT32_MAX);
+    state->q = CLAMP(state->q, INT32_MIN, INT32_MAX);
 }
 
 void PINN_Step(PINN_Model_t *model, phaseState_t *state, int32_t stepSize)
