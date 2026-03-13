@@ -68,8 +68,8 @@ def main():
     learned = np.zeros((STEPS, 2))
     gt = np.zeros((STEPS, 2))
 
-    x = np.array([[0.0, 1.0]])   # (p,q)
-    x_gt = [0.0, 1.0]
+    x = np.array([[0.0, 1.3]])   # (p,q)
+    x_gt = [0.0, 1.3]
 
     for k in range(STEPS):
 
@@ -77,7 +77,7 @@ def main():
         gt[k] = x_gt
 
         # -----------------------------------
-        # Neural Euler rollout (CORRECT)
+        # Neural RK4 rollout
         # -----------------------------------
         x = RK4Step(x, DT, params)
 

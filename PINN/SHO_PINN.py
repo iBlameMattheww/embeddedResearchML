@@ -63,23 +63,15 @@ def main():
 
         dx_hat = model(x)
 
-        # True derivatives for SHO
-        dp_true = -k * q.to(DEVICE)
-        dq_true = p.to(DEVICE)
-
         dp_hat = dx_hat[:, 0:1]
         dq_hat = dx_hat[:, 1:2]
-
-        # Supervised vector field loss
-        loss_data = torch.mean((dp_hat - dp_true)**2 +
-                               (dq_hat - dq_true)**2)
 
         # Physics residual
         r1 = dq_hat - p.to(DEVICE)
         r2 = dp_hat + k * q.to(DEVICE) + mu * p.to(DEVICE)
         loss_phys = torch.mean(r1**2 + r2**2)
 
-        loss = loss_data + 0.1 * loss_phys
+        loss = 0.1 * loss_phys
         loss.backward()
         optimizer.step()
 
