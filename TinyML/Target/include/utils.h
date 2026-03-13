@@ -77,4 +77,24 @@ static inline int32_t Dot_Q16_Q16_TO_Q16(
     return (int32_t)acc;
 }
 
+static inline int32_t Tanh_Approx(int32_t x_q16)
+{
+    int32_t sign = 1;
+
+    if (x_q16 < 0)
+    {
+        sign = -1;
+        x_q16 = -x_q16;
+    }
+
+    int32_t exp2x = Exp_Approx(x_q16 << 1);   // e^(2x)
+
+    int32_t num = exp2x - (1 << 16);          // e^(2x) - 1
+    int32_t den = exp2x + (1 << 16);          // e^(2x) + 1
+
+    int32_t tanh_q16 = ((int64_t)num << 16) / den;
+
+    return sign * tanh_q16;
+}
+
 #endif
