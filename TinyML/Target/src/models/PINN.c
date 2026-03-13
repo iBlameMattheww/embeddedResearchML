@@ -18,7 +18,8 @@ static void MatrixVectorMultiply(
             acc += ((int64_t)weights[i * inputSize + j] * input[j]) >> 16;
         }
 
-        output[i] = CLAMP((int32_t)acc, INT32_MIN, INT32_MAX);
+        acc = CLAMP(acc, INT32_MIN, INT32_MAX);
+        output[i] = (int32_t)acc;
     }
 }
 

@@ -88,6 +88,7 @@ static inline int32_t Tanh_Approx(int32_t x_q16)
     }
 
     int64_t widened = (int64_t)x_q16 << 1;
+    widened = CLAMP(widened, EXP_MIN_Q16, EXP_MAX_Q16);
     int32_t exp2x = Exp_Approx((int32_t)widened);   // e^(2x)
 
     int32_t num = exp2x - (1 << 16);          // e^(2x) - 1
