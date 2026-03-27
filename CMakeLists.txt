@@ -40,6 +40,15 @@ set(VNN_SOURCES
 )
 
 # ------------------------------------------------------------
+# Physics Informed Neural Net (PINN) sources
+# ------------------------------------------------------------
+set(PINN_SOURCES
+    TinyML/Target/src/PINN_Main.c
+    TinyML/Target/src/PINN_Inference.c
+    TinyML/Target/src/models/PINN.c
+)
+
+# ------------------------------------------------------------
 # Symplectic firmware target
 # ------------------------------------------------------------
 add_executable(pico_snn
@@ -92,3 +101,30 @@ pico_enable_stdio_usb(pico_vnn 1)
 pico_enable_stdio_uart(pico_vnn 0)
 
 pico_add_extra_outputs(pico_vnn)
+
+# ------------------------------------------------------------
+# PINN firmware target
+# ------------------------------------------------------------
+add_executable(pico_pinn
+    ${COMMON_SOURCES}
+    ${PINN_SOURCES}
+)
+
+target_include_directories(pico_pinn PRIVATE
+    TinyML/Target/include
+    TinyML/Target/include/PINN_ExportedParams
+    TinyML/Target/src
+    TinyML/Target/src/models
+    TinyML/Target/tools
+)
+
+target_link_libraries(pico_pinn
+    pico_stdlib
+    tinyusb_device
+    tinyusb_board
+)
+
+pico_enable_stdio_usb(pico_pinn 1)
+pico_enable_stdio_uart(pico_pinn 0)
+
+pico_add_extra_outputs(pico_pinn)
